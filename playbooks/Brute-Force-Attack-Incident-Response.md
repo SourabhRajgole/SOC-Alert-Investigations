@@ -1,275 +1,99 @@
-# Brute Force Attack Incident Response Playbook
+# Incident Response Playbook
 
-Playbook ID: PB-SOC-003  
-Category: Authentication / Account Compromise  
-Framework Alignment: NIST SP 800-61 Incident Response Lifecycle  
-MITRE ATT&CK Reference: T1110 – Brute Force  
+## Incident Type
+Brute Force Authentication Attack
 
 ---
 
-# 1. Purpose
+# Introduction
 
-This playbook provides a standardized investigation and response procedure for **brute force authentication attacks**.
-
-A brute force attack occurs when an attacker repeatedly attempts to guess a user's password by submitting multiple login attempts until the correct credentials are discovered.
+Brute force attacks involve repeated login attempts to guess a user’s password.
 
 These attacks commonly target:
 
-• Remote Desktop Protocol (RDP)  
-• SSH servers  
+• RDP servers  
+• SSH services  
 • VPN portals  
-• Web authentication portals  
-• Cloud identity providers  
-
-The objective of this playbook is to enable SOC analysts to:
-
-• Detect brute force login attempts  
-• Determine if an attack was successful  
-• Identify compromised accounts or systems  
-• Contain the threat and prevent unauthorized access  
+• Cloud authentication services
 
 ---
 
-# 2. Scope
+# Summary
 
-This playbook applies to alerts triggered by authentication anomaly detection such as:
-
-Multiple failed login attempts  
-Rapid login attempts from a single source  
-Authentication attempts against multiple accounts  
-
-Example alerts:
-
-SOC176 – RDP Brute Force Detected  
-Excessive Login Failures  
-Suspicious Authentication Attempts  
+This playbook outlines procedures to detect and respond to brute force login attempts.
 
 ---
 
-# 3. Roles and Responsibilities
+# Incident Description
 
-### Tier 1 SOC Analyst
+Indicators of brute force attacks include:
 
-• Validate brute force alert  
-• Identify source and destination of login attempts  
-• Collect authentication logs  
-• Escalate confirmed attacks  
-
-### Tier 2 SOC Analyst
-
-• Perform log analysis  
-• Determine if login attempts succeeded  
-• Investigate lateral movement  
-
-### Incident Response Team
-
-• Contain compromised accounts  
-• Perform remediation  
-• Conduct root cause analysis  
+• Multiple login failures  
+• Rapid authentication attempts  
+• Login attempts targeting a single account
 
 ---
 
-# 4. Detection and Analysis
+# Incident Response Process
 
-## 4.1 Alert Validation
+## Part 1 — Acquire, Preserve Evidence
 
-Review alert metadata and collect the following information:
+Collect:
 
 Source IP address  
-Destination system or service  
-Target username(s)  
-Number of failed login attempts  
-Authentication protocol (RDP, SSH, VPN, Web Login)
+Target username  
+Authentication service  
+Login timestamps
 
-Example alert indicators:
+Analyze authentication logs.
 
-Large number of failed login attempts  
-Repeated authentication failures from the same IP  
-Attempts targeting default usernames  
+Relevant Windows logs:
 
----
-
-## 4.2 Identify Source and Destination
-
-Determine whether the attack originates from an internal or external IP address.
-
-Key investigation points:
-
-Source IP Address  
-Destination Hostname  
-Destination IP Address  
-Authentication Service  
-
-Example:
-
-Source IP: 218.92.0[.]56  
-Destination Host: Matthew  
-Destination IP: 172.16.17.148  
-Protocol: RDP (TCP 3389)
-
-If the source IP is external, the attack may be an internet-based brute force attempt.
+Event ID 4625 — Failed login  
+Event ID 4624 — Successful login
 
 ---
 
-## 4.3 Threat Intelligence Enrichment
+## Part 2 — Containment
 
-Investigate the reputation of the source IP address.
+Block attacker IP addresses.
 
-Use threat intelligence sources such as:
-
-VirusTotal  
-AbuseIPDB  
-GreyNoise  
-Threat intelligence feeds  
-
-Indicators to check:
-
-Previous malicious activity  
-Known scanning or brute force infrastructure  
-Geographic location of the attacker  
-
-If the IP is associated with malicious activity, it strengthens the likelihood of an active attack.
+Disable targeted accounts if necessary.
 
 ---
 
-## 4.4 Log Analysis
+## Part 3 — Eradication
 
-Search the SIEM or log management platform for authentication activity from the attacker IP.
+Reset compromised passwords.
 
-Analyze:
-
-Firewall logs  
-Authentication logs  
-VPN logs  
-Endpoint security logs  
-
-Example log indicators:
-
-Repeated connection attempts to port 3389  
-Multiple failed authentication attempts  
-Authentication attempts against multiple usernames
+Remove malicious processes.
 
 ---
 
-## 4.5 Authentication Log Investigation
+## Part 4 — Recovery
 
-Analyze endpoint authentication logs to determine whether the attack succeeded.
+Enable MFA.
 
-### Windows Authentication Events
-
-Event ID 4625 — Failed login attempt  
-Event ID 4624 — Successful login  
-
-Indicators of compromise:
-
-Successful login after multiple failed attempts  
-Login from unusual geographic location  
-Login during unusual hours  
+Implement account lockout policies.
 
 ---
 
-## 4.6 Endpoint Activity Analysis
+## Part 5 — Post-Incident Activity
 
-If a successful login occurred, investigate post-authentication activity.
+Update brute force detection rules.
 
-Check for:
-
-New processes executed  
-Privilege escalation attempts  
-Network connections initiated by attacker  
-
-Example commands attackers often execute:
-
-whoami  
-net user  
-net localgroup administrators  
-netstat -ano  
-
-These commands help attackers gather system information.
+Review firewall policies.
 
 ---
 
-# 5. Containment
+# MITRE ATT&CK Mapping
 
-If the brute force attack is confirmed:
-
-Block attacker IP address at the firewall  
-Disable compromised user accounts  
-Isolate compromised endpoints if necessary  
-
-If login success occurred:
-
-Terminate active sessions  
-Reset credentials immediately  
-Investigate persistence mechanisms  
+T1110 Brute Force  
+T1078 Valid Accounts
 
 ---
 
-# 6. Eradication
+# References
 
-Remove attacker access and eliminate vulnerabilities.
-
-Actions include:
-
-Password resets for compromised accounts  
-Removal of malicious processes  
-Patching exposed services  
-Reviewing access controls  
-
----
-
-# 7. Recovery
-
-Restore affected systems to normal operation.
-
-Recommended actions:
-
-Enable Multi-Factor Authentication (MFA)  
-Implement account lockout policies  
-Monitor authentication logs for continued activity  
-
-Verify that the attacker no longer has access to the system.
-
----
-
-# 8. Post-Incident Activities
-
-After the incident is resolved:
-
-Conduct incident review  
-Improve authentication monitoring rules  
-Update brute force detection thresholds  
-
-Security awareness training may also be recommended.
-
----
-
-# 9. MITRE ATT&CK Mapping
-
-| Tactic | Technique |
-|------|------|
-| Credential Access | T1110 – Brute Force |
-| Initial Access | T1078 – Valid Accounts |
-| Discovery | T1087 – Account Discovery |
-| Execution | T1059 – Command Execution |
-
----
-
-# 10. Indicators of Compromise (Examples)
-
-| Indicator Type | Value |
-|---------------|------|
-| IPv4 Address | 218.92.0[.]56 |
-| Username | admin |
-| Username | guest |
-| Username | sysadmin |
-| Username | Matthew |
-
----
-
-# 11. References
-
-NIST SP 800-61 — Computer Security Incident Handling Guide  
-MITRE ATT&CK Framework  
-SANS Incident Handler Handbook  
-Microsoft Security Event Documentation
+NIST SP 800-61  
+SANS Incident Handler Handbook
