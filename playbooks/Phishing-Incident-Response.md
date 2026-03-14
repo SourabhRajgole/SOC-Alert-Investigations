@@ -1,209 +1,147 @@
-# Phishing Incident Response Playbook
+# Incident Response Playbook
 
-Framework Alignment: NIST SP 800-61  
-Category: Email Security  
-Severity: Low / Medium / High  
+## Incident Type
+Phishing Email (Standard, Spear Phishing, Attachment-Based)
 
 ---
 
-# 1. Purpose
+# Introduction
 
-This playbook provides standardized procedures for Security Operations Center (SOC) analysts to investigate and respond to phishing-related security alerts.
+This playbook provides procedures for identifying, investigating, and responding to phishing email incidents.
 
-The objective is to:
+Phishing attacks attempt to deceive users into revealing sensitive information or executing malicious payloads through fraudulent emails.
 
-• Detect phishing attempts  
-• Prevent credential theft or malware infection  
+These attacks may involve:
+
+• Credential harvesting websites  
+• Malicious attachments  
+• Malware delivery  
+• Business Email Compromise (BEC)
+
+The objective of this playbook is to ensure that phishing incidents are investigated consistently and that compromised accounts or systems are quickly contained.
+
+---
+
+# Summary
+
+This playbook outlines response procedures for phishing incidents based on the NIST Incident Response Lifecycle.
+
+The playbook helps analysts to:
+
+• Identify phishing emails  
+• Investigate indicators of compromise  
 • Contain compromised accounts  
 • Remove malicious emails from the environment  
+• Conduct post-incident analysis
 
 ---
 
-# 2. Scope
+# Incident Description
 
-This playbook applies to all phishing-related alerts detected through:
+Phishing emails typically include:
 
-Email security gateways  
-SIEM alerts  
-User-reported suspicious emails  
-Threat intelligence feeds  
+• Malicious links  
+• Fake login pages  
+• Malware attachments  
+• Requests for sensitive information
 
-Examples of applicable alerts:
+Common phishing indicators include:
 
-SOC101 – Phishing Mail Detected  
-SOC282 – Phishing Deceptive Mail  
-SOC251 – QR Code Phishing (Quishing)
-
----
-
-# 3. Roles and Responsibilities
-
-SOC Analyst (Tier 1)
-
-Perform alert triage  
-Collect relevant log data  
-Escalate confirmed incidents  
-
-SOC Analyst (Tier 2)
-
-Perform detailed threat analysis  
-Investigate indicators of compromise  
-Recommend containment actions  
-
-Incident Response Team
-
-Execute containment and remediation procedures  
-Perform forensic investigation if required  
+• Suspicious sender addresses  
+• Urgent requests for action  
+• Login verification requests  
+• Unexpected attachments
 
 ---
 
-# 4. Detection and Analysis
+# Incident Response Process
 
-## 4.1 Alert Validation
+## Part 1 — Acquire, Preserve, Document Evidence
 
-Review alert metadata and verify the following:
+Collect the following information:
 
 Sender email address  
 Recipient email address  
-SMTP source IP  
 Email subject  
-Timestamp of delivery  
-Presence of attachments or URLs  
+Message ID  
+Email headers  
+Attachment hashes  
+Embedded URLs
 
----
+Investigate:
 
-## 4.2 Email Content Analysis
-
-Inspect the email for common phishing characteristics:
-
-Urgency or fear-based messaging  
-Credential verification requests  
-Suspicious links or attachments  
-Impersonation of trusted entities  
-
-Examples:
-
-"Verify your account immediately"  
-"Your account will be suspended"  
-"Urgent security update required"
-
----
-
-## 4.3 URL and Attachment Analysis
-
-If the email contains URLs or attachments:
-
-Analyze using security analysis tools.
+• Email header analysis  
+• Domain reputation  
+• URL reputation  
+• Attachment analysis
 
 Recommended tools:
 
 VirusTotal  
-Any.Run  
-Hybrid Analysis  
 URLScan  
+Hybrid Analysis  
+Email gateway logs
 
-Analysts should verify:
+Determine whether:
 
-Malicious detection results  
-Credential harvesting behavior  
-Malware payload delivery  
-
----
-
-## 4.4 Email Delivery Verification
-
-Determine whether the email was:
-
-Blocked  
-Delivered  
-Quarantined  
-
-If delivered:
-
-Identify all affected recipients using email security logs.
+• Other users received the email  
+• The user interacted with the email  
+• Credentials were submitted
 
 ---
 
-## 4.5 User Interaction Analysis
+## Part 2 — Containment
 
-Determine whether the user interacted with the malicious email.
+If the email is confirmed malicious:
 
-Investigate:
-
-URL click activity  
-Attachment downloads  
-Malware execution events  
-
-Log sources:
-
-Proxy logs  
-Endpoint Detection and Response (EDR) telemetry  
-Browser logs  
-Authentication logs  
+• Remove the email from all mailboxes  
+• Block sender domain  
+• Block malicious URLs  
+• Disable compromised accounts
 
 ---
 
-# 5. Containment
+## Part 3 — Eradication
 
-If the email is confirmed malicious, perform the following actions:
+Remove attacker persistence mechanisms:
 
-Delete the malicious email from user mailboxes  
-Block sender domain and SMTP IP  
-Block malicious URLs on web proxy  
-Isolate infected endpoints if malware was executed  
-
----
-
-# 6. Eradication
-
-Remove all malicious artifacts from affected systems.
-
-Actions include:
-
-Malware removal from endpoints  
-Removal of persistence mechanisms  
-Updating email filtering rules  
+Reset compromised passwords  
+Revoke authentication tokens  
+Remove malicious email rules  
+Delete malicious files
 
 ---
 
-# 7. Recovery
+## Part 4 — Recovery
 
-Restore affected systems and user accounts.
+Restore normal user access:
 
-Actions include:
-
-Reset compromised credentials  
-Revoke active authentication sessions  
-Enable Multi-Factor Authentication (MFA)  
-Verify system integrity after remediation  
+Re-enable accounts  
+Enable MFA if not enabled  
+Monitor authentication activity
 
 ---
 
-# 8. Post-Incident Activities
+## Part 5 — Post-Incident Activity
 
-Conduct a post-incident review.
+Conduct lessons learned review:
 
-Activities include:
-
-Review incident timeline  
-Document lessons learned  
-Update detection rules and playbooks  
+Update email filtering rules  
+Improve phishing detection policies  
+Conduct user awareness training
 
 ---
 
-# 9. MITRE ATT&CK Mapping
+# MITRE ATT&CK Mapping
 
-| Tactic | Technique |
-|------|------|
-| Initial Access | T1566 – Phishing |
-| Execution | T1204 – User Execution |
-| Credential Access | T1556 – Phishing Credential Harvesting |
-| Defense Evasion | T1036 – Masquerading |
+Initial Access — T1566 Phishing  
+Credential Access — T1556 Credential Harvesting  
+Execution — T1204 User Execution
 
 ---
 
-# 10. References
+# References
 
-NIST SP 800-61 — Computer Security Incident Handling Guide  
-MITRE ATT&CK Framework  
+NIST SP 800-61 Incident Handling Guide  
+Microsoft Security Operations Playbooks  
 SANS Incident Handler Handbook
