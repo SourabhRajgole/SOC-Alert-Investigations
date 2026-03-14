@@ -1,88 +1,50 @@
-# Incident Response Playbook
+# Security Operations Center Playbook
 
 ## Incident Type
 Password Spraying Attack
 
 ---
 
-# Introduction
+# 1. Objective
 
-Password spraying is a credential attack where attackers attempt a small number of passwords across many accounts.
+This playbook provides a structured investigation and response procedure for **password spraying attacks** detected within the organization's authentication infrastructure.
 
-This technique avoids account lockout policies.
+The objective is to:
 
----
+• Detect large-scale authentication attempts using common passwords  
+• Identify compromised user accounts  
+• Contain unauthorized access  
+• Restore secure authentication operations  
 
-# Summary
-
-This playbook outlines response procedures for password spraying incidents.
-
----
-
-# Incident Description
-
-Common indicators include:
-
-• Authentication attempts across many accounts  
-• Repeated login attempts using the same password  
-• Login attempts from suspicious IP addresses
+This playbook supports SOC analysts in responding quickly and consistently to credential-based attacks.
 
 ---
 
-# Incident Response Process
+# 2. Scope
 
-## Part 1 — Acquire Evidence
+This playbook applies to authentication systems including:
 
-Collect:
+• Active Directory environments  
+• Microsoft 365 / Azure AD  
+• VPN authentication portals  
+• Web application authentication systems  
+• Cloud identity providers  
 
-Source IP  
-Target accounts  
-Authentication logs
-
-Identify login patterns.
-
----
-
-## Part 2 — Containment
-
-Block attacker IPs.
-
-Disable compromised accounts.
+The procedures outlined here apply to alerts triggered by SIEM, IAM monitoring systems, or user-reported suspicious login activity.
 
 ---
 
-## Part 3 — Eradication
+# 3. Threat Description
 
-Force password resets.
+Password spraying is a credential attack technique where an attacker attempts a **small number of common passwords across many user accounts**.
 
-Remove unauthorized accounts.
+Unlike brute force attacks, which repeatedly target a single account, password spraying spreads login attempts across multiple accounts to **avoid account lockout thresholds**.
 
----
+Typical attack flow:
 
-## Part 4 — Recovery
+1. Attacker identifies valid usernames
+2. Attacker attempts common passwords across multiple accounts
+3. One or more accounts eventually authenticate successfully
+4. Attacker uses compromised accounts for persistence or lateral movement
 
-Enable MFA.
-
-Monitor authentication logs.
-
----
-
-## Part 5 — Post-Incident Activity
-
-Improve password policies.
-
-Update detection rules.
-
----
-
-# MITRE ATT&CK Mapping
-
-T1110.003 Password Spraying  
-T1078 Valid Accounts
-
----
-
-# References
-
-NIST SP 800-61  
-Microsoft Security Operations Guide
+Common passwords used in spraying attacks:
