@@ -1,4 +1,4 @@
-# PB-001 — Phishing Incident Response Playbook
+# Phishing Incident Response Playbook
 
 Framework Alignment: NIST SP 800-61  
 Category: Email Security  
