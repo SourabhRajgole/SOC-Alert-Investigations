@@ -1,272 +1,147 @@
-# QR Code Phishing (Quishing) Incident Response Playbook
+# Incident Response Playbook
 
-Playbook ID: PB-SOC-002  
-Category: Email Security / Phishing  
-Framework Alignment: NIST SP 800-61 Incident Response Lifecycle  
-MITRE ATT&CK Reference: T1566 Phishing  
+## Incident Type
+Phishing Email (Standard, Spear Phishing, Attachment-Based)
 
 ---
 
-# 1. Purpose
+# Introduction
 
-This playbook provides a standardized procedure for Security Operations Center (SOC) analysts to investigate and respond to **QR Code Phishing (Quishing)** incidents.
+This playbook provides procedures for identifying, investigating, and responding to phishing email incidents.
 
-Quishing is a phishing technique where attackers embed malicious URLs inside QR codes to bypass email security filters and trick users into visiting credential harvesting sites or downloading malware.
+Phishing attacks attempt to deceive users into revealing sensitive information or executing malicious payloads through fraudulent emails.
 
-The objectives of this playbook are to:
+These attacks may involve:
 
-• Detect QR-code based phishing attempts  
-• Prevent credential compromise or malware infection  
-• Contain affected accounts or endpoints  
+• Credential harvesting websites  
+• Malicious attachments  
+• Malware delivery  
+• Business Email Compromise (BEC)
+
+The objective of this playbook is to ensure that phishing incidents are investigated consistently and that compromised accounts or systems are quickly contained.
+
+---
+
+# Summary
+
+This playbook outlines response procedures for phishing incidents based on the NIST Incident Response Lifecycle.
+
+The playbook helps analysts to:
+
+• Identify phishing emails  
+• Investigate indicators of compromise  
+• Contain compromised accounts  
 • Remove malicious emails from the environment  
+• Conduct post-incident analysis
 
 ---
 
-# 2. Scope
+# Incident Description
 
-This playbook applies to incidents involving:
+Phishing emails typically include:
 
-• Suspicious QR codes embedded in email messages  
-• Security alerts detecting QR-code phishing  
-• User reports of suspicious QR codes in emails  
-• Detection rules such as:
+• Malicious links  
+• Fake login pages  
+• Malware attachments  
+• Requests for sensitive information
 
-SOC251 – Quishing Detected  
-ZeroFont Phishing Detection  
-Email Gateway Suspicious Attachment Alert
+Common phishing indicators include:
 
----
-
-# 3. Roles and Responsibilities
-
-### Tier 1 SOC Analyst
-
-• Validate the alert  
-• Collect email metadata  
-• Identify suspicious indicators  
-• Escalate if malicious indicators are confirmed  
-
-### Tier 2 SOC Analyst
-
-• Perform QR code decoding and analysis  
-• Conduct threat intelligence enrichment  
-• Investigate endpoint or authentication logs  
-
-### Incident Response Team
-
-• Contain compromised accounts or endpoints  
-• Coordinate remediation actions  
-• Conduct post-incident analysis  
+• Suspicious sender addresses  
+• Urgent requests for action  
+• Login verification requests  
+• Unexpected attachments
 
 ---
 
-# 4. Detection and Analysis
+# Incident Response Process
 
-## 4.1 Alert Validation
+## Part 1 — Acquire, Preserve, Document Evidence
 
-Review alert details and extract the following information:
+Collect the following information:
 
-Sender Email Address  
-Recipient Email Address  
-SMTP Source IP Address  
-Email Subject  
-Timestamp of Email Delivery  
-Presence of QR Code in the message  
-
-Example indicators:
-
-Email containing a QR code asking the user to verify MFA  
-Email requesting scanning a code to log into a service  
-QR codes embedded inside PDF or image attachments  
-
----
-
-## 4.2 Email Content Analysis
-
-Analyze the email message body for phishing indicators.
-
-Common characteristics include:
-
-• Urgency or fear-based messaging  
-• Security update or MFA verification requests  
-• Requests to scan QR code for login verification  
-• Impersonation of trusted services (Microsoft, Okta, etc.)
-
-Example message patterns:
-
-"Security update required for your account"
-
-"Scan the QR code to complete your authentication"
-
-"Failure to update security settings will result in account suspension"
-
----
-
-## 4.3 QR Code Analysis
-
-Extract and decode the QR code.
-
-Recommended tools:
-
-CyberChef  
-QR Code Decoder Tools  
-Mobile forensic tools  
-Email security platform sandbox  
-
-Steps:
-
-1. Extract QR image from email  
-2. Decode QR code to reveal embedded URL  
-3. Analyze the decoded URL  
-
----
-
-## 4.4 URL Analysis
-
-Investigate the decoded URL using threat intelligence tools.
-
-Recommended tools:
-
-VirusTotal  
-Any.run  
-URLScan  
-Hybrid Analysis  
-
-Check for the following:
-
-Credential harvesting pages  
-Malicious redirects  
-Known phishing infrastructure  
-Malware downloads  
-
-Example malicious behavior:
-
-Fake Microsoft login page  
-Credential harvesting forms  
-POST requests sending credentials to attacker servers
-
----
-
-## 4.5 Threat Intelligence Enrichment
-
-Investigate the following indicators:
-
-Sender domain reputation  
-SMTP IP reputation  
-Decoded URL reputation  
-
-Sources:
-
-VirusTotal  
-AbuseIPDB  
-Threat Intelligence feeds  
-Internal IOC databases  
-
-Determine if the infrastructure has been associated with phishing campaigns.
-
----
-
-## 4.6 User Interaction Investigation
-
-Determine whether the recipient interacted with the phishing email.
+Sender email address  
+Recipient email address  
+Email subject  
+Message ID  
+Email headers  
+Attachment hashes  
+Embedded URLs
 
 Investigate:
 
-QR code scans  
-Authentication logs  
-Browser history  
-Proxy logs  
+• Email header analysis  
+• Domain reputation  
+• URL reputation  
+• Attachment analysis
 
-Possible scenarios:
+Recommended tools:
 
-User scanned QR code using mobile device  
-User visited phishing page  
-User entered credentials  
+VirusTotal  
+URLScan  
+Hybrid Analysis  
+Email gateway logs
 
-Note:
+Determine whether:
 
-Mobile device scans may bypass endpoint monitoring systems.
+• Other users received the email  
+• The user interacted with the email  
+• Credentials were submitted
 
 ---
 
-# 5. Containment
+## Part 2 — Containment
 
 If the email is confirmed malicious:
 
-• Remove the phishing email from all user mailboxes  
-• Block malicious sender domain and SMTP IP  
-• Block decoded malicious URLs at web gateway  
-• Disable affected user accounts if credentials were entered  
-• Isolate infected endpoints if malware execution occurred  
+• Remove the email from all mailboxes  
+• Block sender domain  
+• Block malicious URLs  
+• Disable compromised accounts
 
 ---
 
-# 6. Eradication
+## Part 3 — Eradication
 
-Remove attacker access and malicious artifacts.
+Remove attacker persistence mechanisms:
 
-Actions include:
-
-Reset compromised credentials  
-Revoke active authentication sessions  
-Remove malicious persistence mechanisms  
-Update phishing detection rules  
+Reset compromised passwords  
+Revoke authentication tokens  
+Remove malicious email rules  
+Delete malicious files
 
 ---
 
-# 7. Recovery
+## Part 4 — Recovery
 
-Restore normal operations.
+Restore normal user access:
 
-Actions include:
-
-Re-enable user access after credential reset  
-Enable Multi-Factor Authentication (MFA)  
-Verify system integrity  
-Monitor authentication logs for suspicious activity  
+Re-enable accounts  
+Enable MFA if not enabled  
+Monitor authentication activity
 
 ---
 
-# 8. Post-Incident Activities
+## Part 5 — Post-Incident Activity
 
-After containment and recovery:
+Conduct lessons learned review:
 
-Conduct incident review  
-Document the attack timeline  
-Update detection rules  
-Improve email filtering policies  
-
-User awareness training should also be conducted to educate employees about QR code phishing threats.
+Update email filtering rules  
+Improve phishing detection policies  
+Conduct user awareness training
 
 ---
 
-# 9. MITRE ATT&CK Mapping
+# MITRE ATT&CK Mapping
 
-| Tactic | Technique |
-|------|------|
-| Reconnaissance | T1589 – Gather Victim Identity Information |
-| Initial Access | T1566 – Phishing |
-| Credential Access | T1556 – Credential Harvesting |
-| Execution | T1204 – User Execution |
-| Defense Evasion | T1036 – Masquerading |
+Initial Access — T1566 Phishing  
+Credential Access — T1556 Credential Harvesting  
+Execution — T1204 User Execution
 
 ---
 
-# 10. Indicators of Compromise (Examples)
+# References
 
-| Indicator Type | Example |
-|---------------|--------|
-| Malicious Domain | ipfs.io |
-| Malicious Domain | nsggroup.it |
-| Malicious URL | credential harvesting page |
-| SMTP IP | malicious email infrastructure |
-| Email Subject | Security Update Required |
-
----
-
-# 11. References
-
-NIST SP 800-61 — Computer Security Incident Handling Guide  
-MITRE ATT&CK Framework  
-SANS Incident Handler Handbook  
-OWASP Phishing Prevention Guidelines
+NIST SP 800-61 Incident Handling Guide  
+Microsoft Security Operations Playbooks  
+SANS Incident Handler Handbook
