@@ -1,56 +1,42 @@
 # Incident Response Playbook
 
 ## Incident Type
-Phishing Email (Standard, Spear Phishing, Attachment-Based)
+QR Code Phishing (Quishing)
 
 ---
 
 # Introduction
 
-This playbook provides procedures for identifying, investigating, and responding to phishing email incidents.
+QR code phishing, commonly known as "Quishing", is a phishing technique where attackers embed malicious URLs inside QR codes to bypass email security filters.
 
-Phishing attacks attempt to deceive users into revealing sensitive information or executing malicious payloads through fraudulent emails.
-
-These attacks may involve:
-
-• Credential harvesting websites  
-• Malicious attachments  
-• Malware delivery  
-• Business Email Compromise (BEC)
-
-The objective of this playbook is to ensure that phishing incidents are investigated consistently and that compromised accounts or systems are quickly contained.
+Users scan the QR code with mobile devices which redirects them to credential harvesting websites.
 
 ---
 
 # Summary
 
-This playbook outlines response procedures for phishing incidents based on the NIST Incident Response Lifecycle.
+This playbook outlines response steps for QR-code based phishing incidents and helps responders to:
 
-The playbook helps analysts to:
-
-• Identify phishing emails  
-• Investigate indicators of compromise  
-• Contain compromised accounts  
-• Remove malicious emails from the environment  
-• Conduct post-incident analysis
+• Decode malicious QR codes  
+• Investigate embedded URLs  
+• Identify compromised accounts  
+• Remove malicious emails
 
 ---
 
 # Incident Description
 
-Phishing emails typically include:
+Common quishing scenarios include:
 
-• Malicious links  
-• Fake login pages  
-• Malware attachments  
-• Requests for sensitive information
+• QR code login verification emails  
+• QR codes embedded inside PDFs  
+• QR codes used to bypass URL filtering
 
-Common phishing indicators include:
+These attacks often target:
 
-• Suspicious sender addresses  
-• Urgent requests for action  
-• Login verification requests  
-• Unexpected attachments
+Microsoft 365 accounts  
+Corporate VPN credentials  
+SSO login portals
 
 ---
 
@@ -58,90 +44,73 @@ Common phishing indicators include:
 
 ## Part 1 — Acquire, Preserve, Document Evidence
 
-Collect the following information:
+Collect:
 
-Sender email address  
-Recipient email address  
-Email subject  
-Message ID  
-Email headers  
-Attachment hashes  
-Embedded URLs
+Sender email  
+Recipient  
+Email body  
+QR code image  
+Decoded URL
 
-Investigate:
+Decode QR code using:
 
-• Email header analysis  
-• Domain reputation  
-• URL reputation  
-• Attachment analysis
+CyberChef  
+QR code decoder tools
 
-Recommended tools:
+Analyze decoded URL with:
 
 VirusTotal  
-URLScan  
-Hybrid Analysis  
-Email gateway logs
-
-Determine whether:
-
-• Other users received the email  
-• The user interacted with the email  
-• Credentials were submitted
+URLScan
 
 ---
 
 ## Part 2 — Containment
 
-If the email is confirmed malicious:
+Remove the phishing email from mailboxes.
 
-• Remove the email from all mailboxes  
-• Block sender domain  
-• Block malicious URLs  
-• Disable compromised accounts
+Block malicious domains.
+
+Disable compromised accounts if credentials were submitted.
 
 ---
 
 ## Part 3 — Eradication
 
-Remove attacker persistence mechanisms:
+Reset compromised passwords.
 
-Reset compromised passwords  
-Revoke authentication tokens  
-Remove malicious email rules  
-Delete malicious files
+Revoke active authentication sessions.
+
+Remove malicious persistence mechanisms.
 
 ---
 
 ## Part 4 — Recovery
 
-Restore normal user access:
+Enable MFA.
 
-Re-enable accounts  
-Enable MFA if not enabled  
-Monitor authentication activity
+Monitor authentication logs.
+
+Ensure attacker access is removed.
 
 ---
 
 ## Part 5 — Post-Incident Activity
 
-Conduct lessons learned review:
+Update phishing detection rules.
 
-Update email filtering rules  
-Improve phishing detection policies  
-Conduct user awareness training
+Conduct user awareness training focused on QR code threats.
 
 ---
 
 # MITRE ATT&CK Mapping
 
-Initial Access — T1566 Phishing  
-Credential Access — T1556 Credential Harvesting  
-Execution — T1204 User Execution
+T1566 Phishing  
+T1204 User Execution  
+T1556 Credential Harvesting
 
 ---
 
 # References
 
-NIST SP 800-61 Incident Handling Guide  
-Microsoft Security Operations Playbooks  
-SANS Incident Handler Handbook
+Microsoft Security Playbooks  
+NIST SP 800-61
