@@ -1,0 +1,126 @@
+# 🔍 Detection Rule: Suspicious Outbound Network Connection
+
+------------------------------------------------------------------------
+
+## 1. Objective
+
+Detect suspicious outbound network connections from endpoints to
+external IPs/domains that may indicate command-and-control (C2)
+communication or malware activity.
+
+------------------------------------------------------------------------
+
+## 2. Log Sources
+
+-   Firewall Logs
+-   Proxy Logs
+-   EDR/XDR Network Telemetry
+-   DNS Logs
+-   NetFlow Logs
+
+------------------------------------------------------------------------
+
+## 3. Detection Logic
+
+Trigger alert when:
+
+-   Endpoint communicates with known malicious IP/domain
+-   Connection to rare or newly observed external domains
+-   Unusual outbound traffic patterns (beaconing behavior)
+-   High volume of outbound traffic to unknown destination
+
+------------------------------------------------------------------------
+
+## 4. Detection Queries
+
+### KQL
+
+    DeviceNetworkEvents
+    | where RemoteIPType == "Public"
+    | summarize count() by DeviceName, RemoteIP, RemoteUrl
+    | where count_ > 50
+
+------------------------------------------------------------------------
+
+### KQL (Rare Domain Detection)
+
+    DeviceNetworkEvents
+    | summarize Connections = count() by RemoteUrl
+    | where Connections < 5
+
+------------------------------------------------------------------------
+
+### Splunk
+
+    index=network_logs
+    | stats count by src_ip, dest_ip, dest_domain
+    | where count > 100
+
+------------------------------------------------------------------------
+
+## 5. Tuning & Thresholds
+
+-   Exclude known trusted domains (Google, Microsoft, CDN services)
+-   Adjust thresholds based on normal traffic baseline
+-   Focus on unusual or first-time connections
+-   Integrate threat intelligence feeds
+
+------------------------------------------------------------------------
+
+## 6. False Positives
+
+-   Legitimate software updates
+-   Cloud service communications
+-   CDN traffic
+-   New application deployments
+
+------------------------------------------------------------------------
+
+## 7. Severity
+
+-   Medium: Rare or unusual outbound connection
+-   High: Connection to suspicious or unknown domain
+-   Critical: Known malicious IP/domain or C2 communication
+
+------------------------------------------------------------------------
+
+## 8. MITRE ATT&CK Mapping
+
+-   T1071 --- Application Layer Protocol\
+-   T1105 --- Ingress Tool Transfer
+
+------------------------------------------------------------------------
+
+## 9. Analyst Notes
+
+Suspicious outbound traffic is a strong indicator of compromise.
+
+Key indicators:
+
+-   Repeated connections to same external IP (beaconing)
+-   Communication with rare domains
+-   Traffic to IPs flagged by threat intelligence
+
+Always check:
+
+-   Is this domain known or trusted?
+-   Does the pattern look automated?
+-   Is there related process activity on the endpoint?
+
+------------------------------------------------------------------------
+
+## 10. Recommended Response
+
+-   Block destination IP/domain
+-   Isolate affected endpoint
+-   Investigate related processes
+-   Perform full EDR scan
+-   Monitor for lateral movement
+
+------------------------------------------------------------------------
+
+## 11. Improvements
+
+-   Integrate DNS anomaly detection
+-   Add beaconing pattern detection (time intervals)
+-   Correlate with endpoint process activity
