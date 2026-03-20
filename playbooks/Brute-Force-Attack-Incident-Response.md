@@ -2,292 +2,261 @@
 
 ## Incident Type
 
-Brute Force Authentication Attack
+Brute Force Attack (Authentication Abuse)
 
 ------------------------------------------------------------------------
 
 # 1. Objective
 
-This playbook provides SOC analysts with a structured process for
-detecting, investigating, and responding to brute force authentication
-attacks.
+This playbook provides a structured approach for SOC analysts to detect,
+investigate, and respond to brute force attacks targeting authentication
+systems.
 
 Objectives:
 
--   Identify repeated login attempts targeting a single account
--   Determine whether the attacker successfully authenticated
--   Contain unauthorized access attempts
--   Protect exposed authentication services
--   Strengthen monitoring and authentication controls
+-   Identify unauthorized login attempts
+-   Differentiate between brute force and benign failures
+-   Assess risk and potential compromise
+-   Contain attacker activity
+-   Prevent future attempts
 
 ------------------------------------------------------------------------
 
 # 2. Scope
 
-This playbook applies to authentication services including:
+Applies to:
 
--   Remote Desktop Protocol (RDP)
--   Secure Shell (SSH)
--   VPN authentication portals
--   Web application login portals
--   Active Directory authentication
--   Cloud identity providers
-
-The procedures apply to alerts triggered by:
-
--   SIEM correlation alerts
--   Firewall alerts
--   Endpoint Detection and Response alerts
--   Authentication monitoring systems
--   Threat intelligence alerts
+-   Windows systems (Event Logs)
+-   VPN and remote access systems
+-   Cloud identity providers (Azure AD, Okta)
+-   Linux SSH authentication logs
+-   Web applications and APIs
 
 ------------------------------------------------------------------------
 
 # 3. Threat Description
 
-A brute force attack occurs when an attacker repeatedly attempts
-different password combinations against a single user account until the
-correct password is discovered.
+A brute force attack involves repeated login attempts using different
+passwords to gain unauthorized access to an account.
 
-These attacks are commonly observed against:
+Attack patterns:
 
--   RDP servers exposed to the internet
--   SSH servers on Linux hosts
--   VPN gateways
--   Cloud authentication portals
-
-Typical attack flow:
-
-1.  Attacker identifies exposed authentication service
-2.  Attacker repeatedly attempts passwords against a target account
-3.  Authentication attempts occur at high frequency
-4.  Eventually a successful login may occur
-5.  Attacker attempts persistence or lateral movement
-
-Common targeted usernames:
-
-    administrator
-    admin
-    root
-    guest
-    test
+-   Multiple passwords → single account (classic brute force)
+-   High-frequency login failures from one IP
+-   Automated tools/scripts targeting exposed services
 
 ------------------------------------------------------------------------
 
-# 4. Detection Sources
+# 4. Severity Classification
 
-Primary log sources include:
+Low: - Few failed attempts - Known user mistake
 
--   Windows Security Event Logs
--   Linux authentication logs
--   VPN authentication logs
+Medium: - Repeated failures from same IP - No successful login
+
+High: - Successful login after multiple failures - Privileged account
+targeted
+
+Critical: - Multiple accounts compromised - Lateral movement observed
+
+------------------------------------------------------------------------
+
+# 5. Escalation Criteria
+
+Escalate if:
+
+-   Successful login detected after brute force attempts
+-   Privileged or admin account targeted
+-   Multiple hosts affected
+-   External malicious IP confirmed
+-   Suspicious post-login activity observed
+
+------------------------------------------------------------------------
+
+# 6. Detection Sources
+
+-   Windows Event Logs (Event ID 4625, 4624)
+-   VPN logs
 -   Firewall logs
--   Identity provider logs
--   Endpoint Detection and Response telemetry
-
-Key indicators:
-
--   Large number of failed login attempts for one user account
--   Authentication attempts from suspicious external IP addresses
--   Login attempts occurring at high frequency
--   Login attempts originating from multiple countries
+-   SIEM correlation rules
+-   Cloud authentication logs
 
 ------------------------------------------------------------------------
 
-# 5. Alert Triage
+# 7. Sample Log Evidence
 
-SOC analyst should collect:
+Example:
 
--   Source IP address
--   Target username
--   Destination host
--   Authentication protocol
--   Login attempt count
+EventID: 4625\
+Account Name: admin\
+Source IP: 185.234.72.11\
+Failure Reason: Bad password\
+Logon Type: 10 (RDP)
+
+Observation:
+
+-   50+ failed attempts within 2 minutes
+-   Same IP targeting same account
+
+------------------------------------------------------------------------
+
+# 8. Alert Triage
+
+Collect:
+
+-   Username
+-   Source IP
+-   Number of attempts
 -   Timestamp range
+-   Target system
+-   Authentication method
 
-Example alert:
+Initial Questions:
 
-Alert: RDP Brute Force Attempt Detected\
-Source IP: 203.xxx.xxx.xxx\
-Target User: Administrator\
-Attempts: 500 login attempts in 10 minutes
-
-Initial triage questions:
-
--   Is a single account being targeted repeatedly?
--   Is the attack coming from an external IP?
--   Is the attack ongoing?
--   Has any login attempt succeeded?
+-   Is the IP internal or external?
+-   Is the account privileged?
+-   Any successful login?
+-   Is this normal user behavior?
 
 ------------------------------------------------------------------------
 
-# 6. Investigation Procedure
+# 9. Investigation Procedure
 
-## Step 1 --- Investigate Source IP
+## Step 1 --- Validate Alert
 
-Search SIEM logs for activity from the attacker IP.
-
-Example SIEM query:
-
-    source_ip = attacker_IP
-
-Check for:
-
--   Multiple authentication failures
--   Repeated login attempts
--   Login attempts against the same username
+-   Confirm number of failed attempts
+-   Check alert accuracy in SIEM
 
 ------------------------------------------------------------------------
 
-## Step 2 --- Review Authentication Logs
+## Step 2 --- Analyze Login Pattern
 
-Relevant Windows Event IDs:
-
-    4625 – Failed login
-    4624 – Successful login
-
-Look for patterns:
-
--   Hundreds of failed attempts
--   High-frequency login attempts
--   Same username repeatedly targeted
+-   Same IP → many passwords → brute force
+-   Same password → many users → password spraying
 
 ------------------------------------------------------------------------
 
-## Step 3 --- Identify Successful Authentication
+## Step 3 --- Check for Success
 
-Determine if the attacker eventually logged in.
+Look for:
 
-Investigate:
+Event ID 4624 (successful login)
 
--   Successful login events
--   Login time and location
--   Device used for authentication
-
-Indicators of compromise:
-
--   Successful login after many failures
--   Login from unusual country
--   Login outside normal working hours
+If found → HIGH severity
 
 ------------------------------------------------------------------------
 
-## Step 4 --- Investigate Post-Login Activity
+## Step 4 --- IP Reputation
 
-If authentication succeeded, review system activity.
-
-Check:
-
--   Process execution logs
--   Command execution
--   Network connections
-
-Suspicious commands:
-
-    whoami
-    net user
-    net localgroup administrators
-    ipconfig
-    netstat
-    powershell -enc
-
-Also investigate:
-
--   Creation of new user accounts
--   Privilege escalation attempts
--   Lateral movement to other systems
+-   Check IP using threat intelligence
+-   Look for known malicious sources
 
 ------------------------------------------------------------------------
 
-# 7. Containment
+## Step 5 --- Scope Analysis
 
-If brute force activity is confirmed:
+Search across environment:
 
-Immediate actions:
-
--   Block attacker IP at firewall
--   Block IP on VPN gateway
--   Enable temporary rate limiting
-
-If authentication succeeded:
-
--   Terminate active sessions
--   Force password reset
--   Disable account temporarily if necessary
+index=auth_logs EventCode=4625 \| stats count by src_ip, user
 
 ------------------------------------------------------------------------
 
-# 8. Eradication
+## Step 6 --- Correlate Logs
 
-Remove attacker access.
+-   Firewall logs (connection attempts)
+-   VPN logs
+-   EDR logs
 
-Actions include:
+------------------------------------------------------------------------
 
+# 10. Detection Queries
+
+## Splunk
+
+index=windows EventCode=4625 \| stats count by src_ip, user \| where
+count \> 20
+
+## KQL
+
+SigninLogs \| summarize count() by IPAddress, UserPrincipalName \| where
+count\_ \> 20
+
+## Sigma Rule (Concept)
+
+title: Brute Force Detection detection: selection: EventID: 4625
+condition: selection \| count \> 20
+
+------------------------------------------------------------------------
+
+# 11. Containment
+
+-   Block malicious IP at firewall
+-   Lock targeted account (if needed)
+-   Enforce MFA
+-   Rate-limit authentication attempts
+
+------------------------------------------------------------------------
+
+# 12. Eradication
+
+-   Remove attacker access
 -   Reset compromised credentials
--   Remove unauthorized accounts
--   Patch exposed services
--   Disable unnecessary authentication services
+-   Audit affected systems
 
 ------------------------------------------------------------------------
 
-# 9. Recovery
+# 13. Recovery
 
-Restore secure operations.
-
-Recommended improvements:
-
--   Enable Multi-Factor Authentication (MFA)
--   Restrict RDP access using VPN
--   Implement account lockout policies
--   Deploy geo-blocking if applicable
-
-Continue monitoring authentication logs for additional attempts.
+-   Unlock user accounts
+-   Monitor login activity
+-   Reinforce authentication policies
 
 ------------------------------------------------------------------------
 
-# 10. Post-Incident Activities
+# 14. Post-Incident Actions
 
-Conduct incident review.
-
-Tasks include:
-
--   Root cause analysis
--   Authentication control review
--   Detection rule tuning
--   Security monitoring improvements
-
-Lessons learned should be used to improve SOC detection capabilities.
+-   Update detection rules
+-   Add IPs to blocklists
+-   Conduct user awareness training
+-   Review authentication policies
 
 ------------------------------------------------------------------------
 
-# 11. Roles and Responsibilities
+# 15. Analyst Notes
 
-SOC Analyst - Investigate authentication alerts - Determine attack
-scope - Collect evidence
+In real investigations, many brute force alerts are false positives
+caused by:
 
-Incident Response Team - Contain compromised accounts - Coordinate
-remediation actions
+-   Users forgetting passwords
+-   Automated scripts
+-   Internal vulnerability scans
 
-Security Engineering Team - Improve detection rules - Implement
-additional security controls
+Key differentiators:
+
+-   High frequency attempts → likely attack
+-   External IP targeting privileged account → high risk
+-   Successful login after failures → confirmed compromise
 
 ------------------------------------------------------------------------
 
-# 12. MITRE ATT&CK Mapping
+# 16. Response Timeline
 
-Credential Access\
+T+0 min → Alert triggered\
+T+5 min → Initial triage\
+T+10 min → Pattern confirmed\
+T+15 min → IP blocked\
+T+30 min → Account secured\
+T+1 hr → Incident documented
+
+------------------------------------------------------------------------
+
+# 17. MITRE ATT&CK Mapping
+
 T1110 -- Brute Force
 
-Initial Access\
-T1078 -- Valid Accounts
-
-Discovery\
-T1087 -- Account Discovery
-
 ------------------------------------------------------------------------
 
-# 13. References
+# 18. References
 
--   NIST SP 800-61 Incident Handling Guide
+-   NIST SP 800-61
 -   MITRE ATT&CK Framework
 -   SANS Incident Handler Handbook
