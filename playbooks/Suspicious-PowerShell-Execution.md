@@ -1,23 +1,24 @@
-# Security Operations Center Playbook
+#  Security Operations Center Playbook
 
 ## Incident Type
 
-Suspicious PowerShell Execution
+Suspicious PowerShell Execution (Encoded / Obfuscated Commands)
 
 ------------------------------------------------------------------------
 
 # 1. Objective
 
-This playbook provides SOC analysts with a structured process to
-investigate and respond to suspicious PowerShell execution alerts.
+This playbook provides a structured approach to detect, investigate, and
+respond to suspicious PowerShell activity, often used in
+post-exploitation and malware execution.
 
 Objectives:
 
--   Identify malicious or suspicious PowerShell activity
--   Detect encoded or obfuscated commands
--   Determine attacker intent
+-   Identify malicious PowerShell usage
+-   Detect obfuscation and encoded commands
+-   Analyze execution behavior
 -   Contain compromised systems
--   Prevent further execution
+-   Prevent further exploitation
 
 ------------------------------------------------------------------------
 
@@ -26,44 +27,75 @@ Objectives:
 Applies to:
 
 -   Windows endpoints
--   Servers running PowerShell
--   EDR-monitored systems
--   SIEM log sources (Windows Event Logs)
+-   Servers
+-   EDR/XDR platforms
+-   SIEM monitoring systems
 
 ------------------------------------------------------------------------
 
 # 3. Threat Description
 
-Attackers commonly use PowerShell because it is:
+Attackers use PowerShell for:
 
--   Built into Windows
--   Powerful and flexible
--   Trusted by systems (LOLBins)
+-   Command execution
+-   Payload delivery
+-   Persistence
+-   Lateral movement
 
-Common malicious patterns:
+Common patterns:
 
 -   Encoded commands (-enc)
 -   Obfuscated scripts
--   Download cradles (IEX, Invoke-WebRequest)
--   Fileless malware
-
-Example:
-
-powershell.exe -enc
-SQBFAFgAIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIABOAGUAdwAtAE8AYgBqAGUAYwB0ACkA
+-   Download cradle attacks
 
 ------------------------------------------------------------------------
 
-# 4. Detection Sources
+# 4. Severity Classification
+
+Low: - Admin usage - Known scripts
+
+Medium: - Suspicious command usage - Unknown scripts
+
+High: - Encoded/obfuscated commands - External connections
+
+Critical: - Confirmed malicious activity - Persistence or lateral
+movement
+
+------------------------------------------------------------------------
+
+# 5. Escalation Criteria
+
+Escalate if:
+
+-   Encoded commands detected
+-   PowerShell spawned from suspicious parent process
+-   External network communication observed
+-   Privileged account used
+
+------------------------------------------------------------------------
+
+# 6. Detection Sources
 
 -   Windows Event Logs (Event ID 4688)
 -   PowerShell Logs (Event ID 4104)
 -   EDR alerts
--   SIEM detection rules
+-   SIEM correlation rules
 
 ------------------------------------------------------------------------
 
-# 5. Alert Triage
+# 7. Sample Evidence
+
+Command:
+
+powershell -enc SQBtAGUAbgB0...
+
+Process Tree:
+
+winword.exe → powershell.exe
+
+------------------------------------------------------------------------
+
+# 8. Alert Triage
 
 Collect:
 
@@ -73,100 +105,99 @@ Collect:
 -   Parent process
 -   Timestamp
 
-Questions:
+------------------------------------------------------------------------
 
--   Is PowerShell expected on this system?
--   Is command encoded or obfuscated?
--   Is it linked to suspicious process?
+# 9. Investigation Procedure
+
+## Step 1 --- Validate Execution
+
+-   Confirm PowerShell execution in logs
+
+## Step 2 --- Decode Command
+
+-   Decode base64 encoded commands
+
+## Step 3 --- Process Analysis
+
+-   Check parent-child relationship
+
+## Step 4 --- Network Activity
+
+-   Identify external connections
+
+## Step 5 --- Scope Analysis
+
+-   Check similar activity across hosts
 
 ------------------------------------------------------------------------
 
-# 6. Investigation Procedure
+# 10. Detection Queries
 
-## Step 1 --- Analyze Command
+## Splunk
 
-Check for:
+index=windows powershell \| search "enc"
 
--   Encoded strings (-enc)
--   Suspicious keywords:
-    -   IEX
-    -   DownloadString
-    -   Invoke-WebRequest
+## KQL
 
-Decode if needed.
+DeviceProcessEvents \| where ProcessCommandLine contains "-enc"
 
 ------------------------------------------------------------------------
 
-## Step 2 --- Review Parent Process
+# 11. Containment
 
-Check which process launched PowerShell:
-
--   explorer.exe (normal)
--   winword.exe (suspicious)
--   cmd.exe (context dependent)
-
-------------------------------------------------------------------------
-
-## Step 3 --- Check Execution Context
-
-Investigate:
-
--   User account
--   Privileges
--   Execution time
-
-------------------------------------------------------------------------
-
-## Step 4 --- Check Network Activity
-
-Look for:
-
--   External connections
--   File downloads
--   Suspicious domains
-
-------------------------------------------------------------------------
-
-# 7. Containment
-
--   Isolate affected endpoint
+-   Isolate endpoint
 -   Kill PowerShell process
--   Block malicious IP/domain
+-   Block malicious domains
 
 ------------------------------------------------------------------------
 
-# 8. Eradication
+# 12. Eradication
 
--   Remove malicious scripts
--   Delete persistence mechanisms
--   Scan system with EDR
-
-------------------------------------------------------------------------
-
-# 9. Recovery
-
--   Restore system if needed
--   Patch vulnerabilities
--   Monitor for re-execution
+-   Remove scripts
+-   Delete persistence
 
 ------------------------------------------------------------------------
 
-# 10. Post-Incident Activities
+# 13. Recovery
 
--   Improve detection rules
--   Document findings
--   Train users if needed
-
-------------------------------------------------------------------------
-
-# 11. MITRE ATT&CK Mapping
-
-Execution\
-T1059.001 -- PowerShell
+-   Restore system
+-   Monitor activity
 
 ------------------------------------------------------------------------
 
-# 12. References
+# 14. Post-Incident
 
--   MITRE ATT&CK
+-   Update rules
+-   Restrict PowerShell usage
+
+------------------------------------------------------------------------
+
+# 15. Analyst Notes
+
+PowerShell is widely used in attacks due to its flexibility.
+
+Key indicators:
+
+-   Encoded commands
+-   Suspicious parent processes
+-   Network callbacks
+
+------------------------------------------------------------------------
+
+# 16. Response Timeline
+
+T+0 min → Alert triggered T+5 min → Command analyzed T+10 min → Endpoint
+isolated
+
+------------------------------------------------------------------------
+
+# 17. MITRE ATT&CK
+
+T1059 --- Command and Scripting Interpreter
+
+------------------------------------------------------------------------
+
+# 18. References
+
 -   NIST SP 800-61
+-   MITRE ATT&CK
