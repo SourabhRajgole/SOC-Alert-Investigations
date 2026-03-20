@@ -1,0 +1,110 @@
+# 🔍 Detection Rule: Impossible Travel (Geolocation Anomaly)
+
+------------------------------------------------------------------------
+
+## 1. Objective
+
+Detect impossible travel scenarios where a user logs in from
+geographically distant locations within a short time period, indicating
+potential account compromise.
+
+------------------------------------------------------------------------
+
+## 2. Log Sources
+
+-   Azure AD Sign-in Logs
+-   Okta Authentication Logs
+-   VPN Logs
+-   Cloud Application Logs
+
+------------------------------------------------------------------------
+
+## 3. Detection Logic
+
+Trigger alert when:
+
+-   Same user logs in from two distant locations
+-   Time difference makes travel physically impossible
+-   IP addresses belong to different geolocations
+
+------------------------------------------------------------------------
+
+## 4. Detection Queries
+
+### KQL
+
+    SigninLogs
+    | summarize Locations = make_set(Location), IPs = make_set(IPAddress), count() by UserPrincipalName, bin(TimeGenerated, 1h)
+    | where array_length(Locations) > 1
+
+------------------------------------------------------------------------
+
+### Splunk
+
+    index=signin_logs
+    | stats values(src_ip) as ips, values(location) as locations by user
+    | where mvcount(locations) > 1
+
+------------------------------------------------------------------------
+
+## 5. Tuning & Thresholds
+
+-   Adjust time window (30 min to 2 hours)
+-   Exclude known VPN/proxy IPs
+-   Consider corporate network locations
+-   Use geo-distance calculation if available
+
+------------------------------------------------------------------------
+
+## 6. False Positives
+
+-   VPN usage
+-   Mobile network switching
+-   Corporate proxy routing
+-   Cloud services using distributed IPs
+
+------------------------------------------------------------------------
+
+## 7. Severity
+
+-   Low: Known VPN usage
+-   Medium: Location anomaly without suspicious activity
+-   High: New location + suspicious activity
+-   Critical: Confirmed account compromise
+
+------------------------------------------------------------------------
+
+## 8. MITRE ATT&CK Mapping
+
+-   T1078 --- Valid Accounts
+
+------------------------------------------------------------------------
+
+## 9. Analyst Notes
+
+Impossible travel alerts are often noisy.
+
+Key checks:
+
+-   Same device vs different device
+-   VPN vs unknown IP
+-   MFA usage
+-   User behavior after login
+
+------------------------------------------------------------------------
+
+## 10. Recommended Response
+
+-   Verify with user
+-   Reset password if needed
+-   Revoke active sessions
+-   Enforce MFA
+-   Monitor account activity
+
+------------------------------------------------------------------------
+
+## 11. Improvements
+
+-   Add device fingerprinting
+-   Correlate with MFA logs
+-   Integrate risk scoring
