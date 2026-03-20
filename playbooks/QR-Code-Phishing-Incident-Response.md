@@ -1,116 +1,229 @@
-# Incident Response Playbook
+#  Security Operations Center Playbook
 
 ## Incident Type
+
 QR Code Phishing (Quishing)
 
----
+------------------------------------------------------------------------
 
-# Introduction
+# 1. Objective
 
-QR code phishing, commonly known as "Quishing", is a phishing technique where attackers embed malicious URLs inside QR codes to bypass email security filters.
+This playbook provides a structured approach to detect, investigate, and
+respond to QR code phishing attacks where users are redirected to
+malicious sites via scanned QR codes.
 
-Users scan the QR code with mobile devices which redirects them to credential harvesting websites.
+Objectives:
 
----
+-   Identify malicious QR-based phishing attempts
+-   Analyze redirection and payload behavior
+-   Determine user interaction and impact
+-   Contain potential compromise
+-   Prevent similar attacks
 
-# Summary
+------------------------------------------------------------------------
 
-This playbook outlines response steps for QR-code based phishing incidents and helps responders to:
+# 2. Scope
 
-• Decode malicious QR codes  
-• Investigate embedded URLs  
-• Identify compromised accounts  
-• Remove malicious emails
+Applies to:
 
----
+-   Email platforms (Microsoft 365, Gmail)
+-   Mobile devices and endpoints
+-   Web gateways and proxy logs
+-   SIEM and EDR telemetry
 
-# Incident Description
+------------------------------------------------------------------------
 
-Common quishing scenarios include:
+# 3. Threat Description
 
-• QR code login verification emails  
-• QR codes embedded inside PDFs  
-• QR codes used to bypass URL filtering
+QR phishing (Quishing) involves embedding malicious URLs inside QR codes
+to bypass traditional email security filters.
 
-These attacks often target:
+Attack flow:
 
-Microsoft 365 accounts  
-Corporate VPN credentials  
-SSO login portals
+1.  User receives QR code via email/document
+2.  User scans QR code (usually on mobile device)
+3.  Redirected to phishing page
+4.  Credentials or sensitive data captured
 
----
+Common characteristics:
 
-# Incident Response Process
+-   QR codes in PDFs or images
+-   Shortened or obfuscated URLs
+-   Fake login portals (Microsoft, Google, banking)
 
-## Part 1 — Acquire, Preserve, Document Evidence
+------------------------------------------------------------------------
+
+# 4. Severity Classification
+
+Low: - QR code detected but not scanned
+
+Medium: - QR scanned but no credential entry
+
+High: - Credential entry suspected
+
+Critical: - Confirmed credential compromise - Multiple users affected
+
+------------------------------------------------------------------------
+
+# 5. Escalation Criteria
+
+Escalate if:
+
+-   User scanned QR and accessed suspicious site
+-   Credentials entered
+-   Multiple users received same QR campaign
+-   Domain impersonates trusted service
+
+------------------------------------------------------------------------
+
+# 6. Detection Sources
+
+-   Email security alerts
+-   User-reported suspicious emails
+-   Web proxy logs (mobile traffic)
+-   SIEM alerts for suspicious domains
+
+------------------------------------------------------------------------
+
+# 7. Sample Evidence
+
+Email contains:
+
+QR Code → hxxps://secure-login-microsoft\[.\]com
+
+Observed behavior:
+
+-   QR leads to fake login page
+-   Domain recently registered
+-   No SSL reputation
+
+------------------------------------------------------------------------
+
+# 8. Alert Triage
 
 Collect:
 
-Sender email  
-Recipient  
-Email body  
-QR code image  
-Decoded URL
+-   Recipient email
+-   QR code image/file
+-   Embedded URL
+-   Timestamp
+-   User interaction status
 
-Decode QR code using:
+Key Questions:
 
-CyberChef  
-QR code decoder tools
+-   Did the user scan the QR code?
+-   Was any data entered?
+-   Is domain malicious or newly registered?
+-   Are multiple users impacted?
 
-Analyze decoded URL with:
+------------------------------------------------------------------------
 
-VirusTotal  
-URLScan
+# 9. Investigation Procedure
 
----
+## Step 1 --- Extract QR Content
 
-## Part 2 — Containment
+-   Decode QR code
+-   Identify embedded URL
 
-Remove the phishing email from mailboxes.
+## Step 2 --- URL Analysis
 
-Block malicious domains.
+-   Check domain reputation (VirusTotal)
+-   Analyze redirects
+-   Identify phishing page
 
-Disable compromised accounts if credentials were submitted.
+## Step 3 --- User Interaction Check
 
----
+-   Confirm if QR was scanned
+-   Verify credential submission
 
-## Part 3 — Eradication
+## Step 4 --- Endpoint / Mobile Analysis
 
-Reset compromised passwords.
+-   Check browser activity
+-   Review login attempts
 
-Revoke active authentication sessions.
+## Step 5 --- Scope Analysis
 
-Remove malicious persistence mechanisms.
+Search for similar emails or domains across environment
 
----
+------------------------------------------------------------------------
 
-## Part 4 — Recovery
+# 10. Detection Queries
 
-Enable MFA.
+## Splunk
 
-Monitor authentication logs.
+index=email "QR" \| stats count by sender, recipient
 
-Ensure attacker access is removed.
+## KQL
 
----
+EmailEvents \| where Subject contains "scan" \| summarize count() by
+SenderFromAddress, RecipientEmailAddress
 
-## Part 5 — Post-Incident Activity
+------------------------------------------------------------------------
 
-Update phishing detection rules.
+# 11. Containment
 
-Conduct user awareness training focused on QR code threats.
+-   Block malicious domain
+-   Remove email from all users
+-   Disable compromised accounts
+-   Enforce MFA
 
----
+------------------------------------------------------------------------
 
-# MITRE ATT&CK Mapping
+# 12. Eradication
 
-T1566 Phishing  
-T1204 User Execution  
-T1556 Credential Harvesting
+-   Remove phishing emails
+-   Reset credentials
+-   Clear browser sessions
 
----
+------------------------------------------------------------------------
 
-# References
+# 13. Recovery
 
-Microsoft Security Playbooks  
-NIST SP 800-61
+-   Restore user access
+-   Monitor login activity
+-   Strengthen email filtering
+
+------------------------------------------------------------------------
+
+# 14. Post-Incident Actions
+
+-   Improve QR detection rules
+-   Conduct user awareness training
+-   Block similar domains
+-   Update threat intelligence
+
+------------------------------------------------------------------------
+
+# 15. Analyst Notes
+
+QR phishing is harder to detect because:
+
+-   It bypasses URL scanning tools
+-   Users scan using personal devices
+-   Redirection happens outside corporate network
+
+Key indicators:
+
+-   Newly registered domains
+-   Login pages mimicking Microsoft/Google
+-   Mobile-based authentication attempts
+
+------------------------------------------------------------------------
+
+# 16. Response Timeline
+
+T+0 min → Alert triggered T+5 min → QR decoded T+10 min → URL analyzed
+T+15 min → Domain blocked T+30 min → Users notified
+
+------------------------------------------------------------------------
+
+# 17. MITRE ATT&CK
+
+T1566 --- Phishing
+
+------------------------------------------------------------------------
+
+# 18. References
+
+-   NIST SP 800-61
+-   MITRE ATT&CK Framework
