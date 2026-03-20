@@ -1,0 +1,125 @@
+# 🔍 Detection Rule: Suspicious Login (New Device / Location)
+
+------------------------------------------------------------------------
+
+## 1. Objective
+
+Detect suspicious login activity indicating potential account
+compromise, such as logins from new devices, unknown locations, or risky
+sign-ins.
+
+------------------------------------------------------------------------
+
+## 2. Log Sources
+
+-   Azure AD Sign-in Logs
+-   Okta Authentication Logs
+-   VPN Logs
+-   Cloud Application Logs
+-   Identity Protection / Risky Sign-ins
+
+------------------------------------------------------------------------
+
+## 3. Detection Logic
+
+Trigger alert when:
+
+-   Login occurs from a new or unknown device
+-   Login from unfamiliar geographic location
+-   Risky sign-in flagged by identity provider
+-   Multiple failed attempts followed by success
+
+------------------------------------------------------------------------
+
+## 4. Detection Queries
+
+### KQL
+
+    SigninLogs
+    | where RiskLevelDuringSignIn in ("medium","high")
+    | project TimeGenerated, UserPrincipalName, IPAddress, Location, RiskLevelDuringSignIn
+
+------------------------------------------------------------------------
+
+### KQL (New Device Detection)
+
+    SigninLogs
+    | summarize Devices = make_set(DeviceDetail) by UserPrincipalName
+    | where array_length(Devices) > 1
+
+------------------------------------------------------------------------
+
+### Splunk
+
+    index=signin_logs
+    | stats values(src_ip) as ips, values(device) as devices by user
+    | where mvcount(devices) > 1
+
+------------------------------------------------------------------------
+
+## 5. Tuning & Thresholds
+
+-   Exclude corporate IP ranges
+-   Allowlist known user devices
+-   Tune based on normal user behavior
+-   Combine with geo-location checks
+
+------------------------------------------------------------------------
+
+## 6. False Positives
+
+-   User logging in from new device
+-   VPN or proxy usage
+-   Mobile network changes
+-   Travel by legitimate user
+
+------------------------------------------------------------------------
+
+## 7. Severity
+
+-   Low: New device, expected behavior
+-   Medium: New location, no suspicious activity
+-   High: Risky sign-in or unusual behavior
+-   Critical: Confirmed compromise or data access
+
+------------------------------------------------------------------------
+
+## 8. MITRE ATT&CK Mapping
+
+-   T1078 --- Valid Accounts
+
+------------------------------------------------------------------------
+
+## 9. Analyst Notes
+
+Suspicious login alerts are very common in SOC environments.
+
+Key indicators:
+
+-   First-time device usage
+-   Login from unusual country
+-   Behavior change after login
+
+Always verify:
+
+-   Is this expected user behavior?
+-   Was MFA used?
+-   What actions occurred after login?
+
+------------------------------------------------------------------------
+
+## 10. Recommended Response
+
+-   Verify login with user
+-   Reset password if needed
+-   Revoke active sessions
+-   Enforce MFA
+-   Monitor account activity
+
+------------------------------------------------------------------------
+
+## 11. Improvements
+
+-   Add behavioral analytics
+-   Correlate with impossible travel
+-   Integrate risk scoring systems
