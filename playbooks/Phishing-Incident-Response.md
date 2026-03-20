@@ -1,147 +1,214 @@
-# Incident Response Playbook
+#  Security Operations Center Playbook
 
 ## Incident Type
-Phishing Email (Standard, Spear Phishing, Attachment-Based)
 
----
+Phishing (Standard, Spear-Phishing, Attachment-Based)
 
-# Introduction
+------------------------------------------------------------------------
 
-This playbook provides procedures for identifying, investigating, and responding to phishing email incidents.
+# 1. Objective
 
-Phishing attacks attempt to deceive users into revealing sensitive information or executing malicious payloads through fraudulent emails.
+This playbook provides a structured approach to detect, investigate, and
+respond to phishing attacks targeting users through email-based social
+engineering.
 
-These attacks may involve:
+Objectives:
 
-• Credential harvesting websites  
-• Malicious attachments  
-• Malware delivery  
-• Business Email Compromise (BEC)
+-   Identify phishing attempts and malicious intent
+-   Determine user interaction and impact
+-   Analyze email artifacts and payloads
+-   Contain potential compromise
+-   Prevent further attacks
 
-The objective of this playbook is to ensure that phishing incidents are investigated consistently and that compromised accounts or systems are quickly contained.
+------------------------------------------------------------------------
 
----
+# 2. Scope
 
-# Summary
+Applies to:
 
-This playbook outlines response procedures for phishing incidents based on the NIST Incident Response Lifecycle.
+-   Email platforms (Microsoft 365, Gmail, Exchange)
+-   End-user endpoints
+-   Email security gateways
+-   SIEM and EDR telemetry
 
-The playbook helps analysts to:
+------------------------------------------------------------------------
 
-• Identify phishing emails  
-• Investigate indicators of compromise  
-• Contain compromised accounts  
-• Remove malicious emails from the environment  
-• Conduct post-incident analysis
+# 3. Threat Description
 
----
+Phishing attacks attempt to trick users into:
 
-# Incident Description
+-   Clicking malicious links
+-   Downloading malware attachments
+-   Entering credentials into fake login pages
 
-Phishing emails typically include:
+Types:
 
-• Malicious links  
-• Fake login pages  
-• Malware attachments  
-• Requests for sensitive information
+-   Standard phishing → mass campaigns
+-   Spear phishing → targeted users
+-   Attachment-based phishing → malware delivery
 
-Common phishing indicators include:
+------------------------------------------------------------------------
 
-• Suspicious sender addresses  
-• Urgent requests for action  
-• Login verification requests  
-• Unexpected attachments
+# 4. Severity Classification
 
----
+Low: - No user interaction - Known spam/phishing template
 
-# Incident Response Process
+Medium: - Email delivered to user inbox - Suspicious indicators present
 
-## Part 1 — Acquire, Preserve, Document Evidence
+High: - User clicked link or opened attachment - Credential submission
+suspected
 
-Collect the following information:
+Critical: - Credentials confirmed compromised - Malware executed or
+multiple users affected
 
-Sender email address  
-Recipient email address  
-Email subject  
-Message ID  
-Email headers  
-Attachment hashes  
-Embedded URLs
+------------------------------------------------------------------------
 
-Investigate:
+# 5. Escalation Criteria
 
-• Email header analysis  
-• Domain reputation  
-• URL reputation  
-• Attachment analysis
+Escalate if:
 
-Recommended tools:
+-   User clicked phishing link
+-   Credentials entered on suspicious site
+-   Attachment executed
+-   Multiple users received same email
+-   Email impersonates internal executive (BEC risk)
 
-VirusTotal  
-URLScan  
-Hybrid Analysis  
-Email gateway logs
+------------------------------------------------------------------------
 
-Determine whether:
+# 6. Detection Sources
 
-• Other users received the email  
-• The user interacted with the email  
-• Credentials were submitted
+-   Email security gateway alerts
+-   User-reported phishing emails
+-   SIEM alerts (URL clicks, downloads)
+-   EDR telemetry (attachment execution)
 
----
+------------------------------------------------------------------------
 
-## Part 2 — Containment
+# 7. Sample Evidence
 
-If the email is confirmed malicious:
+From: support@micros0ft-security.com Reply-To: attacker@gmail.com SPF:
+Fail DKIM: Fail
 
-• Remove the email from all mailboxes  
-• Block sender domain  
-• Block malicious URLs  
-• Disable compromised accounts
+URL: hxxps://login-microsoft-secure\[.\]com
 
----
+Attachment: invoice_2026.zip → payload.exe
 
-## Part 3 — Eradication
+------------------------------------------------------------------------
 
-Remove attacker persistence mechanisms:
+# 8. Alert Triage
 
-Reset compromised passwords  
-Revoke authentication tokens  
-Remove malicious email rules  
-Delete malicious files
+Collect:
 
----
+-   Recipient email
+-   Sender email/domain
+-   Email subject
+-   Timestamp
+-   Links and attachments
+-   User interaction status
 
-## Part 4 — Recovery
+------------------------------------------------------------------------
 
-Restore normal user access:
+# 9. Investigation Procedure
 
-Re-enable accounts  
-Enable MFA if not enabled  
-Monitor authentication activity
+## Step 1 --- Analyze Email Header
 
----
+-   Check SPF, DKIM, DMARC
+-   Identify spoofed domains
 
-## Part 5 — Post-Incident Activity
+## Step 2 --- URL Analysis
 
-Conduct lessons learned review:
+-   Check domain reputation
+-   Identify lookalike domains
 
-Update email filtering rules  
-Improve phishing detection policies  
-Conduct user awareness training
+## Step 3 --- Attachment Analysis
 
----
+-   Identify file type
+-   Check hash reputation
 
-# MITRE ATT&CK Mapping
+## Step 4 --- User Interaction Check
 
-Initial Access — T1566 Phishing  
-Credential Access — T1556 Credential Harvesting  
-Execution — T1204 User Execution
+-   Verify link clicks
+-   Confirm credential entry
 
----
+## Step 5 --- Endpoint Analysis
 
-# References
+-   Review EDR logs
+-   Identify suspicious processes
 
-NIST SP 800-61 Incident Handling Guide  
-Microsoft Security Operations Playbooks  
-SANS Incident Handler Handbook
+## Step 6 --- Scope Analysis
+
+Search for similar emails across environment
+
+------------------------------------------------------------------------
+
+# 10. Detection Queries
+
+## Splunk
+
+index=email subject="urgent" \| stats count by sender, recipient
+
+## KQL
+
+EmailEvents \| where Subject contains "urgent" \| summarize count() by
+SenderFromAddress, RecipientEmailAddress
+
+------------------------------------------------------------------------
+
+# 11. Containment
+
+-   Block sender domain
+-   Quarantine emails
+-   Block malicious URLs
+-   Isolate endpoint if needed
+
+------------------------------------------------------------------------
+
+# 12. Eradication
+
+-   Remove emails
+-   Delete malicious files
+-   Reset credentials
+
+------------------------------------------------------------------------
+
+# 13. Recovery
+
+-   Monitor user accounts
+-   Reinforce email security
+
+------------------------------------------------------------------------
+
+# 14. Post-Incident
+
+-   Update rules
+-   Conduct awareness training
+
+------------------------------------------------------------------------
+
+# 15. Analyst Notes
+
+Most phishing alerts are low risk unless user interaction occurs.
+
+-   No click → low risk
+-   Click → medium/high risk
+-   Credential submission → critical
+
+------------------------------------------------------------------------
+
+# 16. Response Timeline
+
+T+0 min → Alert triggered T+5 min → Email analyzed T+10 min → User
+verified T+15 min → Domain blocked
+
+------------------------------------------------------------------------
+
+# 17. MITRE ATT&CK
+
+T1566 --- Phishing
+
+------------------------------------------------------------------------
+
+# 18. References
+
+-   NIST SP 800-61
+-   MITRE ATT&CK
