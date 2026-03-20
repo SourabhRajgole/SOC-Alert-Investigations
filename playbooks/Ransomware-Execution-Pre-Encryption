@@ -1,0 +1,160 @@
+# Security Operations Center Playbook
+
+## Incident Type
+
+Ransomware Execution (Pre-Encryption Stage)
+
+------------------------------------------------------------------------
+
+# 1. Objective
+
+This playbook provides SOC analysts with a structured approach to detect
+and respond to ransomware activity **before encryption occurs**.
+
+Objectives:
+
+-   Detect early ransomware indicators
+-   Prevent file encryption and data loss
+-   Contain affected systems quickly
+-   Eradicate malicious payloads
+-   Restore secure operations
+
+------------------------------------------------------------------------
+
+# 2. Scope
+
+Applies to:
+
+-   Endpoints (Windows, Linux)
+-   Servers
+-   EDR/XDR platforms
+-   SIEM monitoring systems
+
+------------------------------------------------------------------------
+
+# 3. Threat Description
+
+Ransomware attacks typically follow:
+
+1.  Initial access (phishing, RDP, malware)
+2.  Execution of malicious payload
+3.  Privilege escalation
+4.  Lateral movement
+5.  Data encryption
+
+Pre-encryption indicators:
+
+-   Mass file access
+-   Shadow copy deletion
+-   Suspicious PowerShell commands
+-   Creation of unknown processes
+
+------------------------------------------------------------------------
+
+# 4. Detection Sources
+
+-   EDR behavioral alerts
+-   File system monitoring
+-   Windows Event Logs
+-   PowerShell logs
+-   SIEM correlation rules
+
+------------------------------------------------------------------------
+
+# 5. Alert Triage
+
+Collect:
+
+-   Hostname
+-   Username
+-   Process name
+-   File activity
+-   Command line
+-   Timestamp
+
+------------------------------------------------------------------------
+
+# 6. Investigation Procedure
+
+## Step 1 --- Identify Suspicious Behavior
+
+Look for:
+
+-   Rapid file modifications
+-   High CPU usage by unknown process
+-   Deletion of backups
+
+------------------------------------------------------------------------
+
+## Step 2 --- Process Analysis
+
+Check:
+
+-   Process tree
+-   Parent process
+-   Execution path
+
+------------------------------------------------------------------------
+
+## Step 3 --- Check Commands
+
+Look for:
+
+vssadmin delete shadows\
+wmic shadowcopy delete\
+powershell encryption scripts
+
+------------------------------------------------------------------------
+
+## Step 4 --- Network Activity
+
+Check for:
+
+-   C2 communication
+-   External connections
+
+------------------------------------------------------------------------
+
+# 7. Containment
+
+Immediate actions:
+
+-   Isolate endpoint
+-   Stop malicious processes
+-   Disable network access
+
+------------------------------------------------------------------------
+
+# 8. Eradication
+
+-   Remove malware
+-   Delete persistence
+-   Clean system
+
+------------------------------------------------------------------------
+
+# 9. Recovery
+
+-   Restore from backups
+-   Patch vulnerabilities
+-   Monitor system
+
+------------------------------------------------------------------------
+
+# 10. Post-Incident
+
+-   Improve detection rules
+-   Conduct review
+
+------------------------------------------------------------------------
+
+# 11. MITRE ATT&CK
+
+T1486 -- Data Encrypted for Impact
+
+------------------------------------------------------------------------
+
+# 12. References
+
+-   NIST SP 800-61
+-   MITRE ATT&CK
