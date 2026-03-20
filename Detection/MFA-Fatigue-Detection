@@ -1,0 +1,128 @@
+# 🔍 Detection Rule: MFA Fatigue (Push Notification Abuse)
+
+------------------------------------------------------------------------
+
+## 1. Objective
+
+Detect MFA fatigue attacks where an attacker repeatedly sends push
+notifications to a user in an attempt to trick them into approving a
+login request.
+
+------------------------------------------------------------------------
+
+## 2. Log Sources
+
+-   Azure AD Sign-in Logs / Risky Sign-ins
+-   MFA Provider Logs (Microsoft, Duo, Okta)
+-   Identity Protection / Conditional Access Logs
+-   SIEM Authentication Logs
+
+------------------------------------------------------------------------
+
+## 3. Detection Logic
+
+Trigger alert when:
+
+-   Multiple MFA push requests are sent to the same user within a short
+    time window
+-   Repeated MFA denials followed by a single approval
+-   MFA prompts originate from unfamiliar IP/device
+-   High volume of MFA events without successful authentication
+
+------------------------------------------------------------------------
+
+## 4. Detection Queries
+
+### KQL (Microsoft Sentinel / Defender)
+
+    SigninLogs
+    | where AuthenticationRequirement == "multiFactorAuthentication"
+    | summarize MFAAttempts = count(), Approvals = countif(ResultType == 0), Denials = countif(ResultType != 0) 
+        by UserPrincipalName, IPAddress, bin(TimeGenerated, 5m)
+    | where MFAAttempts > 5
+
+------------------------------------------------------------------------
+
+### KQL (Sequence: Denials then Approval)
+
+    SigninLogs
+    | where AuthenticationRequirement == "multiFactorAuthentication"
+    | summarize Attempts = count(), Denials = countif(ResultType != 0), Approvals = countif(ResultType == 0) 
+        by UserPrincipalName, IPAddress, bin(TimeGenerated, 5m)
+    | where Denials >= 3 and Approvals >= 1
+
+------------------------------------------------------------------------
+
+### Splunk
+
+    index=auth_logs mfa=true
+    | stats count as attempts, values(result) as results by user, src_ip
+    | where attempts > 5
+
+------------------------------------------------------------------------
+
+## 5. Tuning & Thresholds
+
+-   Adjust threshold (e.g., \>5 prompts in 5--10 minutes)
+-   Exclude known internal testing or helpdesk workflows
+-   Correlate with device/IP reputation
+-   Prioritize alerts with approval after multiple denials
+
+------------------------------------------------------------------------
+
+## 6. False Positives
+
+-   Users repeatedly entering wrong credentials
+-   MFA device sync issues
+-   Legitimate access retries (poor connectivity)
+
+------------------------------------------------------------------------
+
+## 7. Severity
+
+-   Medium: Multiple MFA prompts, no approval
+-   High: Approval after multiple denials
+-   Critical: Approval from unfamiliar location/device
+
+------------------------------------------------------------------------
+
+## 8. MITRE ATT&CK Mapping
+
+-   T1621 --- Multi-Factor Authentication Request Generation
+-   T1078 --- Valid Accounts
+
+------------------------------------------------------------------------
+
+## 9. Analyst Notes
+
+MFA fatigue relies on user behavior, not technical bypass.
+
+Key indicators:
+
+-   Burst of MFA prompts
+-   User eventually clicks "Approve"
+-   New or suspicious IP/device involved
+
+Always verify:
+
+-   Was the user expecting the login?
+-   Is the IP/location normal for the user?
+-   What actions occurred after approval?
+
+------------------------------------------------------------------------
+
+## 10. Recommended Response
+
+-   Immediately revoke active sessions
+-   Reset user password
+-   Re-register MFA if compromised
+-   Block suspicious IPs
+-   Educate user about MFA fatigue attacks
+
+------------------------------------------------------------------------
+
+## 11. Improvements
+
+-   Implement number matching or phishing-resistant MFA
+-   Add conditional access (device/location restrictions)
+-   Integrate risk-based authentication
