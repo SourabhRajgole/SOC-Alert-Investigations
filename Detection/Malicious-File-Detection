@@ -1,0 +1,117 @@
+# 🔍 Detection Rule: Malicious File Download / Execution
+
+------------------------------------------------------------------------
+
+## 1. Objective
+
+Detect malicious file downloads and executions on endpoints, indicating
+potential malware infection or initial compromise.
+
+------------------------------------------------------------------------
+
+## 2. Log Sources
+
+-   EDR/XDR Logs (Defender, CrowdStrike, SentinelOne)
+-   Windows Event Logs (Event ID 4688)
+-   File Monitoring Logs
+-   Antivirus Logs
+-   Web Proxy Logs
+
+------------------------------------------------------------------------
+
+## 3. Detection Logic
+
+Trigger alert when:
+
+-   Executable files run from suspicious locations:
+    -   Downloads
+    -   AppData
+    -   Temp folders
+-   File hash matches known malicious indicators
+-   Suspicious parent-child process chain observed
+-   File downloaded from external/untrusted domain
+
+------------------------------------------------------------------------
+
+## 4. Detection Queries
+
+### Splunk
+
+    index=edr_logs file_path="*Downloads*" OR file_path="*AppData*"
+    | stats count by file_name, file_hash, host
+
+------------------------------------------------------------------------
+
+### KQL
+
+    DeviceProcessEvents
+    | where FolderPath contains "Downloads" or FolderPath contains "AppData"
+    | summarize count() by FileName, SHA256, DeviceName
+
+------------------------------------------------------------------------
+
+### Hash Detection (KQL)
+
+    DeviceFileEvents
+    | where SHA256 in ("known_malicious_hash_here")
+
+------------------------------------------------------------------------
+
+## 5. Tuning & Thresholds
+
+-   Exclude known safe applications
+-   Allowlist IT/admin tools
+-   Monitor only unsigned or unknown publishers
+-   Focus on user directories
+
+------------------------------------------------------------------------
+
+## 6. False Positives
+
+-   Legitimate software installations
+-   Admin scripts/tools
+-   Developer tools execution
+
+------------------------------------------------------------------------
+
+## 7. Severity
+
+-   Low: File downloaded only
+-   Medium: File executed
+-   High: Suspicious behavior or persistence
+-   Critical: Malware confirmed or multiple systems affected
+
+------------------------------------------------------------------------
+
+## 8. MITRE ATT&CK Mapping
+
+-   T1204 --- User Execution\
+-   T1059 --- Command and Scripting Interpreter
+
+------------------------------------------------------------------------
+
+## 9. Analyst Notes
+
+Key indicators of malicious files:
+
+-   Execution from user directories
+-   Unknown or unsigned binaries
+-   Suspicious process chains (browser → cmd → exe)
+
+------------------------------------------------------------------------
+
+## 10. Recommended Response
+
+-   Isolate affected system
+-   Block file hash
+-   Remove malicious file
+-   Reset user credentials if needed
+-   Run full AV/EDR scan
+
+------------------------------------------------------------------------
+
+## 11. Improvements
+
+-   Integrate sandbox analysis
+-   Add behavior-based detection
+-   Correlate with network activity
