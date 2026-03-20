@@ -1,4 +1,4 @@
-# Security Operations Center Playbook
+# 🛡️ Security Operations Center Playbook
 
 ## Incident Type
 
@@ -9,14 +9,15 @@ Ransomware Execution (Pre-Encryption Stage)
 # 1. Objective
 
 This playbook provides SOC analysts with a structured approach to detect
-and respond to ransomware activity **before encryption occurs**.
+and respond to ransomware activity **before encryption begins**,
+minimizing impact and preventing data loss.
 
 Objectives:
 
 -   Detect early ransomware indicators
--   Prevent file encryption and data loss
--   Contain affected systems quickly
--   Eradicate malicious payloads
+-   Prevent file encryption
+-   Contain infected systems quickly
+-   Remove malicious payloads
 -   Restore secure operations
 
 ------------------------------------------------------------------------
@@ -25,7 +26,7 @@ Objectives:
 
 Applies to:
 
--   Endpoints (Windows, Linux)
+-   Endpoints (Windows/Linux)
 -   Servers
 -   EDR/XDR platforms
 -   SIEM monitoring systems
@@ -37,124 +38,225 @@ Applies to:
 Ransomware attacks typically follow:
 
 1.  Initial access (phishing, RDP, malware)
-2.  Execution of malicious payload
+2.  Payload execution
 3.  Privilege escalation
 4.  Lateral movement
 5.  Data encryption
 
 Pre-encryption indicators:
 
--   Mass file access
 -   Shadow copy deletion
--   Suspicious PowerShell commands
+-   Suspicious PowerShell activity
+-   Mass file access/modification
 -   Creation of unknown processes
 
 ------------------------------------------------------------------------
 
-# 4. Detection Sources
+# 4. Severity Classification
+
+Low: - Suspicious activity without confirmation
+
+Medium: - Indicators of execution without impact
+
+High: - Confirmed ransomware behavior indicators
+
+Critical: - Encryption activity started or spreading
+
+------------------------------------------------------------------------
+
+# 5. Escalation Criteria
+
+Escalate if:
+
+-   Shadow copies deleted
+-   Suspicious encryption-like behavior detected
+-   Multiple endpoints affected
+-   Privileged account involvement
+-   Lateral movement observed
+
+------------------------------------------------------------------------
+
+# 6. Detection Sources
 
 -   EDR behavioral alerts
--   File system monitoring
 -   Windows Event Logs
--   PowerShell logs
+-   PowerShell logs (Event ID 4104)
+-   File monitoring alerts
 -   SIEM correlation rules
 
 ------------------------------------------------------------------------
 
-# 5. Alert Triage
+# 7. Sample Evidence
+
+Command:
+
+vssadmin delete shadows /all /quiet
+
+Process:
+
+powershell.exe → ransomware_loader.exe
+
+Behavior:
+
+-   High CPU usage
+-   Rapid file access attempts
+
+------------------------------------------------------------------------
+
+# 8. Alert Triage
 
 Collect:
 
 -   Hostname
 -   Username
 -   Process name
--   File activity
 -   Command line
+-   File activity
 -   Timestamp
+
+Key Questions:
+
+-   Is encryption behavior observed?
+-   Are backups being deleted?
+-   Any lateral movement?
+-   Multiple systems impacted?
 
 ------------------------------------------------------------------------
 
-# 6. Investigation Procedure
+# 9. Investigation Procedure
 
-## Step 1 --- Identify Suspicious Behavior
+## Step 1 --- Validate Alert
 
-Look for:
-
--   Rapid file modifications
--   High CPU usage by unknown process
--   Deletion of backups
+-   Confirm suspicious behavior in EDR
+-   Check detection type (behavioral vs signature)
 
 ------------------------------------------------------------------------
 
 ## Step 2 --- Process Analysis
 
-Check:
-
--   Process tree
--   Parent process
--   Execution path
+-   Identify malicious process
+-   Analyze parent-child relationship
 
 ------------------------------------------------------------------------
 
-## Step 3 --- Check Commands
+## Step 3 --- Command Analysis
 
 Look for:
 
 vssadmin delete shadows\
 wmic shadowcopy delete\
-powershell encryption scripts
+bcdedit /set {default} recoveryenabled no
 
 ------------------------------------------------------------------------
 
-## Step 4 --- Network Activity
+## Step 4 --- File Activity
 
-Check for:
-
--   C2 communication
--   External connections
+-   Detect rapid file access/modification
+-   Check for unusual extensions
 
 ------------------------------------------------------------------------
 
-# 7. Containment
+## Step 5 --- Network Activity
 
-Immediate actions:
+-   Identify C2 communication
+-   Check outbound connections
 
--   Isolate endpoint
--   Stop malicious processes
+------------------------------------------------------------------------
+
+## Step 6 --- Scope Analysis
+
+Search across environment:
+
+-   Similar processes on other hosts
+-   Same user activity elsewhere
+
+------------------------------------------------------------------------
+
+# 10. Detection Queries
+
+## Splunk
+
+index=edr_logs process_name="vssadmin" \| stats count by host
+
+## KQL
+
+DeviceProcessEvents \| where ProcessCommandLine contains "vssadmin" \|
+summarize count() by DeviceName
+
+## Sigma (Concept)
+
+title: Shadow Copy Deletion detection: selection: command: "vssadmin
+delete shadows" condition: selection
+
+------------------------------------------------------------------------
+
+# 11. Containment
+
+-   Immediately isolate endpoint
+-   Kill malicious processes
 -   Disable network access
+-   Block related IPs/domains
 
 ------------------------------------------------------------------------
 
-# 8. Eradication
+# 12. Eradication
 
--   Remove malware
--   Delete persistence
--   Clean system
+-   Remove ransomware binaries
+-   Delete persistence mechanisms
+-   Perform full system scan
 
 ------------------------------------------------------------------------
 
-# 9. Recovery
+# 13. Recovery
 
 -   Restore from backups
+-   Rebuild systems if needed
 -   Patch vulnerabilities
--   Monitor system
 
 ------------------------------------------------------------------------
 
-# 10. Post-Incident
+# 14. Post-Incident Actions
 
 -   Improve detection rules
--   Conduct review
+-   Harden backup policies
+-   Conduct user awareness training
+-   Review attack entry point
 
 ------------------------------------------------------------------------
 
-# 11. MITRE ATT&CK
+# 15. Analyst Notes
 
-T1486 -- Data Encrypted for Impact
+In real SOC environments, early ransomware detection is critical.
+
+Key observations:
+
+-   Shadow copy deletion is a strong indicator
+-   PowerShell is commonly used in early stages
+-   Lateral movement often occurs before encryption
+
+Early containment can completely prevent damage.
 
 ------------------------------------------------------------------------
 
-# 12. References
+# 16. Response Timeline
 
--   NIST SP 800-61
--   MITRE ATT&CK
+T+0 min → Alert triggered\
+T+5 min → Suspicious activity confirmed\
+T+10 min → Endpoint isolated\
+T+20 min → Malware identified\
+T+45 min → Systems secured
+
+------------------------------------------------------------------------
+
+# 17. MITRE ATT&CK
+
+T1486 --- Data Encrypted for Impact\
+T1490 --- Inhibit System Recovery
+
+------------------------------------------------------------------------
+
+# 18. References
+
+-   NIST SP 800-61\
+-   MITRE ATT&CK Framework\
+-   SANS Incident Handler Handbook
