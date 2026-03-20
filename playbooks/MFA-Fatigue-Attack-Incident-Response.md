@@ -2,275 +2,246 @@
 
 ## Incident Type
 
-MFA Fatigue / Push Notification Bombing Attack
+MFA Fatigue Attack (Push Notification Abuse)
 
 ------------------------------------------------------------------------
 
 # 1. Objective
 
-This playbook provides SOC analysts with a structured investigation and
-response procedure for **MFA Fatigue attacks**, also known as **push
-notification bombing**.
+This playbook provides SOC analysts with a structured approach to detect
+and respond to MFA fatigue attacks, where attackers attempt to gain
+access by overwhelming users with repeated MFA push notifications.
 
 Objectives:
 
--   Detect repeated MFA push requests targeting a user
--   Identify possible credential compromise
--   Prevent unauthorized authentication approval
--   Contain compromised user accounts
--   Improve identity protection controls
+-   Detect suspicious MFA push patterns
+-   Identify compromised credentials
+-   Prevent unauthorized access
+-   Contain and secure affected accounts
 
 ------------------------------------------------------------------------
 
 # 2. Scope
 
-This playbook applies to authentication platforms using push-based MFA,
-including:
+Applies to:
 
--   Microsoft 365 / Azure AD
--   Okta
--   Duo Security
--   Google Workspace
--   Enterprise VPN authentication
--   Cloud identity providers
-
-Alerts may originate from:
-
--   Identity protection alerts
--   SIEM detection rules
--   Authentication monitoring systems
--   User reports of repeated MFA prompts
+-   Cloud identity platforms (Azure AD, Okta, Duo)
+-   VPN authentication systems
+-   SaaS applications with MFA enabled
 
 ------------------------------------------------------------------------
 
 # 3. Threat Description
 
-MFA Fatigue attacks occur when an attacker repeatedly triggers MFA push
-notifications to a victim in hopes that the user will eventually approve
-the request.
+MFA fatigue attacks occur when:
 
-Typical attack sequence:
+-   Attacker has valid username/password
+-   Sends repeated MFA push requests
+-   User eventually accepts request (fatigue or confusion)
 
-1.  Attacker obtains valid credentials (phishing, password spraying,
-    credential stuffing)
-2.  Attacker attempts login repeatedly
-3.  MFA push notifications are repeatedly sent to the user
-4.  User eventually approves the request
-5.  Attacker gains authenticated access
+Common characteristics:
 
-These attacks rely on **user fatigue or confusion**.
-
-Real-world incidents have shown attackers sending **dozens or hundreds
-of MFA prompts** until a user accidentally approves one.
+-   Multiple MFA prompts in short time
+-   Login attempts from unfamiliar locations
+-   Off-hours authentication attempts
 
 ------------------------------------------------------------------------
 
-# 4. Detection Sources
+# 4. Severity Classification
 
-Primary detection sources include:
+Low: - Few MFA denials - Known user testing
 
--   Identity provider authentication logs
--   MFA authentication logs
--   Azure AD sign-in logs
--   Okta authentication logs
--   SIEM alerts
--   User reports
+Medium: - Multiple MFA requests - No approval
 
-Key indicators include:
+High: - MFA approved after repeated requests - Suspicious IP or device
 
--   Large number of MFA push notifications in short time window
--   Repeated authentication attempts for same user
--   Login attempts from unusual IP addresses
--   Authentication attempts from unfamiliar locations
+Critical: - Confirmed unauthorized access - Privileged account
+compromise
 
 ------------------------------------------------------------------------
 
-# 5. Alert Triage
+# 5. Escalation Criteria
 
-SOC analyst should collect:
+Escalate if:
+
+-   MFA approval follows repeated push attempts
+-   Suspicious IP or location detected
+-   Privileged account targeted
+-   Multiple users targeted from same IP
+-   User reports unexpected MFA prompts
+
+------------------------------------------------------------------------
+
+# 6. Detection Sources
+
+-   Azure AD Sign-in Logs
+-   Okta System Logs
+-   Duo MFA logs
+-   SIEM correlation alerts
+
+------------------------------------------------------------------------
+
+# 7. Sample Log Evidence
+
+User: jane.doe
+
+Attempts: 10 MFA push requests within 5 minutes
+
+Final Event: MFA Approved
+
+IP: 203.45.12.67\
+Location: Unknown/Foreign
+
+------------------------------------------------------------------------
+
+# 8. Alert Triage
+
+Collect:
 
 -   Username
--   Source IP address
--   Login location
--   Number of MFA requests
--   Authentication timestamps
--   Device used for login
+-   Number of MFA attempts
+-   IP address
+-   Location
+-   Device info
+-   MFA result (approved/denied)
 
-Example alert:
+Key Questions:
 
-Alert: Excessive MFA Push Requests Detected\
-User: jane.doe@company.com\
-Attempts: 25 MFA requests in 10 minutes\
-Source IP: 91.xxx.xxx.xxx
-
-Initial triage questions:
-
--   Did the user approve any MFA requests?
--   Are login attempts coming from unfamiliar locations?
--   Does the IP belong to VPN or anonymization infrastructure?
--   Did the user report suspicious MFA prompts?
+-   Did user approve MFA?
+-   Is location unusual?
+-   Is device recognized?
+-   Any prior suspicious activity?
 
 ------------------------------------------------------------------------
 
-# 6. Investigation Procedure
+# 9. Investigation Procedure
 
-## Step 1 --- Review Authentication Logs
+## Step 1 --- Validate Alert
 
-Search identity provider logs for activity related to the user.
-
-Example SIEM query:
-
-    user = "target_user"
-    | stats count by source_ip, authentication_result
-
-Look for:
-
--   Multiple MFA requests
--   Repeated login attempts
--   Authentication attempts from same IP
+-   Confirm number of MFA attempts
+-   Identify approval/denial pattern
 
 ------------------------------------------------------------------------
 
-## Step 2 --- Verify User Activity
+## Step 2 --- Analyze Login Context
 
-Contact the affected user to confirm:
-
--   Whether they attempted login
--   Whether they approved any MFA request
--   Whether they received repeated push notifications
-
-If the user confirms they did **not initiate the login**, assume
-potential compromise.
+-   Check IP reputation
+-   Identify geolocation anomalies
 
 ------------------------------------------------------------------------
 
-## Step 3 --- Investigate Source IP
+## Step 3 --- Device & Session Review
 
-Analyze the source IP address.
-
-Check:
-
--   IP geolocation
--   Threat intelligence reputation
--   VPN or proxy infrastructure
-
-Use threat intelligence sources such as:
-
--   VirusTotal
--   AbuseIPDB
--   GreyNoise
+-   Compare device ID
+-   Check session creation after MFA approval
 
 ------------------------------------------------------------------------
 
-## Step 4 --- Investigate Post-Authentication Activity
+## Step 4 --- User Confirmation
 
-If the attacker successfully authenticated, review:
-
--   File access
--   Email activity
--   Cloud console activity
--   Administrative actions
-
-Check for:
-
--   Privilege escalation
--   Data access or downloads
--   Creation of persistence mechanisms
+-   Contact user
+-   Verify if MFA approval was legitimate
 
 ------------------------------------------------------------------------
 
-# 7. Containment
+## Step 5 --- Scope Analysis
 
-If MFA fatigue attack is confirmed:
+Search for:
 
-Immediate actions:
+-   Same IP targeting multiple users
+-   Repeated MFA fatigue patterns
 
--   Reset user password
+------------------------------------------------------------------------
+
+# 10. Detection Queries
+
+## KQL
+
+SigninLogs \| where AuthenticationRequirement ==
+"multiFactorAuthentication" \| summarize count() by UserPrincipalName,
+IPAddress \| where count\_ \> 5
+
+## Splunk
+
+index=auth_logs mfa_status=denied \| stats count by user, src_ip \|
+where count \> 5
+
+## Sigma (Concept)
+
+title: MFA Fatigue Attack detection: selection: mfa_requests: high
+condition: selection
+
+------------------------------------------------------------------------
+
+# 11. Containment
+
+-   Block suspicious IP
+-   Force password reset
 -   Revoke active sessions
--   Revoke authentication tokens
--   Temporarily disable account if necessary
-
-Block malicious IP addresses where applicable.
+-   Require MFA re-registration
 
 ------------------------------------------------------------------------
 
-# 8. Eradication
+# 12. Eradication
 
-Remove attacker persistence.
-
-Actions include:
-
--   Remove unauthorized OAuth applications
--   Remove malicious mailbox rules
--   Remove suspicious API tokens
--   Audit privileged access
+-   Remove unauthorized sessions
+-   Reset credentials
+-   Review account permissions
 
 ------------------------------------------------------------------------
 
-# 9. Recovery
+# 13. Recovery
 
-Restore secure user access.
+-   Confirm secure login
+-   Monitor account activity
+-   Reinforce MFA policies
 
-Recommended improvements:
+------------------------------------------------------------------------
+
+# 14. Post-Incident Actions
 
 -   Enable number matching MFA
--   Enable location-based authentication checks
--   Implement risk-based conditional access policies
--   Implement MFA prompt limits
-
-Continue monitoring authentication logs for suspicious activity.
+-   Limit push notifications
+-   Train users to report unexpected MFA prompts
+-   Update detection rules
 
 ------------------------------------------------------------------------
 
-# 10. Post-Incident Activities
+# 15. Analyst Notes
 
-Conduct post-incident review.
+In real SOC environments, MFA fatigue attacks are increasingly common.
 
-Tasks include:
+Key observations:
 
--   Root cause analysis
--   Review identity monitoring rules
--   Update detection thresholds
--   Provide user security awareness training
+-   Users often approve MFA accidentally
+-   Attackers target users during off-hours
+-   Push-based MFA is weaker than number matching
 
-------------------------------------------------------------------------
+Best practice:
 
-# 11. Roles and Responsibilities
-
-SOC Analyst
-
--   Investigate authentication anomalies
--   Validate user activity
--   Document investigation findings
-
-Incident Response Team
-
--   Contain compromised accounts
--   Coordinate remediation actions
-
-Security Engineering
-
--   Implement stronger authentication protections
--   Improve monitoring rules
+-   Always verify with user before closing alert
+-   Treat MFA approval after multiple pushes as HIGH risk
 
 ------------------------------------------------------------------------
 
-# 12. MITRE ATT&CK Mapping
+# 16. Response Timeline
 
-Credential Access\
-T1110 -- Brute Force
+T+0 min → Alert triggered\
+T+5 min → MFA pattern identified\
+T+10 min → User contacted\
+T+15 min → Account secured\
+T+30 min → Sessions revoked
 
-Initial Access\
-T1078 -- Valid Accounts
+------------------------------------------------------------------------
 
-Defense Evasion\
+# 17. MITRE ATT&CK Mapping
+
 T1621 -- Multi-Factor Authentication Request Generation
 
 ------------------------------------------------------------------------
 
-# 13. References
+# 18. References
 
--   NIST SP 800-61 Incident Handling Guide
+-   NIST SP 800-61
 -   MITRE ATT&CK Framework
--   Microsoft Identity Security Documentation
--   SANS Incident Handler Handbook
+-   Microsoft Identity Protection
