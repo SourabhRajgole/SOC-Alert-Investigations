@@ -10,9 +10,9 @@ detection engineering.
 
 This project simulates a real SOC environment where alerts are:
 
--   Investigated using logs and telemetry\
--   Classified as True Positive / False Positive\
--   Escalated based on impact\
+-   Investigated using logs and telemetry
+-   Classified as True Positive / False Positive
+-   Escalated based on impact
 -   Documented in a structured format
 
 ------------------------------------------------------------------------
@@ -28,10 +28,10 @@ README.md
 
 Includes:
 
--   Alert summary\
--   Log analysis\
--   IOC identification\
--   Classification\
+-   Alert summary
+-   Log analysis
+-   IOC identification
+-   Classification
 -   Escalation decisions
 
 ------------------------------------------------------------------------
@@ -40,28 +40,28 @@ Includes:
 
 Covers:
 
--   Phishing & QR phishing\
--   Ransomware\
--   PowerShell attacks\
--   Brute force & password spraying\
+-   Phishing & QR phishing
+-   Ransomware
+-   PowerShell attacks
+-   Brute force & password spraying
 -   Identity-based attacks
 
 ------------------------------------------------------------------------
 
 # 🧠 Skills Demonstrated
 
--   SOC alert triage\
--   Log analysis\
--   Threat detection\
--   Incident response\
+-   SOC alert triage
+-   Log analysis
+-   Threat detection
+-   Incident response
 -   Decision making
 
 ------------------------------------------------------------------------
 
 # ⚙️ Frameworks Used
 
--   NIST SP 800-61\
--   MITRE ATT&CK\
+-   NIST SP 800-61
+-   MITRE ATT&CK
 -   SANS
 
 ------------------------------------------------------------------------
